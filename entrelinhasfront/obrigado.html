@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compra confirmada | entre linhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main class="wrap"><div class="thanks" id="raiz"></div></main>
+<div id="site-footer"></div>
+<script src="js/data.js"></script><script src="js/icons.js"></script><script src="js/covers.js"></script><script src="js/layout.js"></script>
+<script>
+  L.mount({ active: 'biblioteca' });
+  const id = new URLSearchParams(location.search).get('id');
+  let pedido = null; try { pedido = JSON.parse(sessionStorage.getItem('er_pedido')); } catch (e) { }
+  const l = ER.porId(id) || ER.porId(pedido && pedido.id) || ER.LIVROS[0];
+  const bump = pedido && pedido.bump ? ER.porId(pedido.bump) : null;
+  const boleto = pedido && pedido.metodo === 'boleto';
+  const email = pedido ? pedido.email : 'voce@email.com.br';
+  const nome = pedido ? pedido.nome.split(' ')[0] : 'Leitor';
+  const itens = [l].concat(bump ? [bump] : []);
+  const total = pedido ? pedido.total : l.preco;
+  const metodoNome = { pix: 'Pix', cartao: 'Cartão de crédito', boleto: 'Boleto bancário' }[pedido ? pedido.metodo : 'pix'];
+  document.title = (boleto ? 'Boleto gerado' : 'Compra confirmada') + ' | entre linhas';
+
+  const arquivos = itens.map(it => it.formatos.map(f => `
+    <div class="dl-row">${icon(f[0] === 'MP4' ? 'play' : 'epub')}
+      <div><b>${escHTML(it.titulo)}</b><small>${f[0]}, ${f[1]}</small></div>
+      ${boleto ? '<span class="tag tag-warn">Libera após o pagamento</span>' : `<a class="btn btn-ghost" href="#" data-dl="${escHTML(it.titulo)}.${f[0].toLowerCase()}">${icon('download', 18)} Baixar</a>`}
+    </div>`).join('')).join('');
+
+  document.getElementById('raiz').innerHTML = `
+    <div>
+      ${boleto ? `<span class="seal" style="background:#F6E4CF;color:#7A4217;border-color:#E8C9A3">${icon('boleto', 20)} Boleto gerado</span>` : `<span class="seal">${icon('check', 20)} Pagamento confirmado</span>`}
+      <h1>${boleto ? `${nome}, falta pagar o boleto.` : `${nome}, seu livro já é seu.`}</h1>
+      <p class="lede">${boleto ? `Mandamos o boleto para <b>${escHTML(email)}</b>. Ele vence em 3 dias. Quando o banco confirmar, os arquivos aparecem aqui e na sua estante.` : `Também enviamos os arquivos para <b>${escHTML(email)}</b>. Se não aparecer na caixa de entrada em alguns minutos, olhe o spam.`}</p>
+      <div class="dl-list">${arquivos}</div>
+      <div class="row-flex">
+        ${boleto ? '' : '<a class="btn btn-lg" href="biblioteca.html">Abrir minha estante</a>'}
+        <a class="btn-quiet" href="catalogo.html">Continuar explorando o catálogo</a>
+      </div>
+      <hr class="hr">
+      <h2 style="font-size:1.375rem">Ajude ${escHTML(l.autor.split(' ')[0])} a ser encontrada</h2>
+      <p class="muted" style="max-width:52ch">Autores independentes vivem de indicação. Quando terminar a leitura, deixe uma avaliação de duas linhas na página do livro. Faz mais diferença do que parece.</p>
+    </div>
+    <aside class="receipt" aria-label="Recibo">
+      ${coverSVG(l)}
+      <dl>
+        <div><dt>Pedido</dt><dd>${pedido ? pedido.numero : 'EL-004821'}</dd></div>
+        ${itens.map(it => `<div><dt>${escHTML(it.titulo)}</dt><dd>${ER.brl(it === l ? l.preco : 9.9)}</dd></div>`).join('')}
+        <div><dt>Forma de pagamento</dt><dd>${metodoNome}</dd></div>
+        <div style="border-top:1.5px solid var(--ink);padding-top:10px;font-weight:600"><dt>Total</dt><dd class="serif" style="font-size:1.375rem">${ER.brl(total)}</dd></div>
+      </dl>
+      <p class="xs muted" style="margin:16px 0 0">Prazo de reembolso: até 7 dias corridos. Responda ao e-mail do recibo e cuidamos do resto.</p>
+    </aside>`;
+  document.querySelectorAll('[data-dl]').forEach(a => a.onclick = e => { e.preventDefault(); L.toast('Download iniciado: ' + a.dataset.dl); });
+</script>
+</body>
+</html>

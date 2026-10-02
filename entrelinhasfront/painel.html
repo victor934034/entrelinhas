@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel do autor | entre linhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .chart-tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--paper); font-size: .8125rem; padding: 6px 10px; border-radius: 3px; white-space: nowrap; transform: translate(-50%, -100%); margin-top: -8px; z-index: 5; }
+  .chart-tip b { font-family: var(--f-title); }
+  .chart-box { position: relative; }
+  .legend-note { display: flex; gap: 18px; font-size: .8125rem; color: var(--ink-2); margin-top: 8px; }
+  .legend-note i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; }
+</style>
+</head>
+<body>
+<div id="site-header"></div>
+<div class="dash">
+  <aside class="side">
+    <div class="who"><b>Helena Arruda Moura</b><span class="small muted">Autora, desde março de 2025</span></div>
+    <nav aria-label="Painel">
+      <a href="painel.html" aria-current="page" id="n-visao"></a>
+      <a href="painel.html#produtos" id="n-prod"></a>
+      <a href="painel.html#vendas" id="n-vendas"></a>
+      <a href="painel.html#saques" id="n-fin"></a>
+      <a href="novo-produto.html" id="n-novo"></a>
+    </nav>
+  </aside>
+
+  <main class="dash-main">
+    <div class="dash-top">
+      <div><p class="muted" style="margin:0 0 4px" id="periodo"></p><h1>Como estão suas vendas</h1></div>
+      <a class="btn" href="novo-produto.html" id="btn-novo"></a>
+    </div>
+
+    <div class="dash-grid-1">
+      <section class="panel panel-navy on-navy" aria-labelledby="h-saldo">
+        <h2 id="h-saldo" style="font-size:1.0625rem;font-family:var(--f-body);font-weight:500;color:#C9D4DC">Disponível para saque</h2>
+        <p class="balance" id="saldo"></p>
+        <p class="small" style="color:#C9D4DC;margin:0">Cai na conta em até 2 dias úteis, por Pix.</p>
+        <div class="split"><div><b id="a-liberar"></b>a liberar em 7 dias</div><div><b id="sacado"></b>sacado neste mês</div></div>
+        <button class="btn btn-paper btn-block mt-2" id="sacar">Sacar via Pix</button>
+      </section>
+
+      <section class="panel" aria-labelledby="h-graf">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+          <div><h2 id="h-graf">Vendas por dia, últimos 30 dias</h2><p class="small muted" style="margin:0" id="graf-sub"></p></div>
+          <button class="btn-quiet small" id="alt" aria-pressed="false">Ver como tabela</button>
+        </div>
+        <div class="chart-box" id="graf"></div>
+        <div id="tabela-graf" hidden class="table-wrap" style="max-height:260px;overflow:auto"></div>
+      </section>
+    </div>
+
+    <div class="dash-grid-2">
+      <section class="panel" id="vendas" aria-labelledby="h-ult">
+        <h2 id="h-ult">Últimas vendas</h2>
+        <div class="table-wrap"><table><thead><tr><th>Quando</th><th>Comprador</th><th>Produto</th><th>Forma</th><th class="num">Você recebe</th><th>Situação</th></tr></thead><tbody id="vendas-tb"></tbody></table></div>
+      </section>
+      <aside class="panel" aria-labelledby="h-av">
+        <h2 id="h-av">Recados</h2>
+        <ul class="notes">
+          <li><b>Saque de R$ 1.200,00 cai amanhã</b><span class="muted small">Pedido feito na terça, 15h12.</span></li>
+          <li><b>Dois boletos vencem hoje</b><span class="muted small">Se forem pagos, somam R$ 43,82 ao seu saldo.</span></li>
+          <li><b>Josiane Prado deixou uma avaliação</b><span class="muted small">“Contos curtos que ficam na cabeça o dia inteiro.” 5 estrelas.</span></li>
+          <li><b>Um pedido de reembolso</b><span class="muted small">Compra de 12/09, dentro dos 7 dias. Responda até sexta.</span></li>
+        </ul>
+      </aside>
+    </div>
+
+    <section class="panel" id="produtos" aria-labelledby="h-meus">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><h2 id="h-meus">Seus produtos</h2><a class="btn-quiet small" href="novo-produto.html">Adicionar produto</a></div>
+      <div id="prods"></div>
+    </section>
+  </main>
+</div>
+
+<div class="modal-back" id="modal-saque" role="dialog" aria-modal="true" aria-labelledby="ms-t">
+  <div class="modal" style="max-width:480px">
+    <button class="modal-x" aria-label="Fechar"></button>
+    <h3 id="ms-t">Sacar via Pix</h3>
+    <p class="muted">O valor cai na chave cadastrada em até 2 dias úteis. Não cobramos taxa de saque acima de R$ 100,00.</p>
+    <div class="field"><label for="valor-saque">Quanto você quer sacar</label><div class="money"><input id="valor-saque" inputmode="decimal"></div><span class="msg" id="ms-erro"></span><span class="hint" id="ms-hint"></span></div>
+    <div class="field"><label>Chave Pix</label><input value="helena.moura@email.com.br" readonly></div>
+    <div class="row-flex mt-1"><button class="btn" id="confirma-saque">Confirmar saque</button><button class="btn-quiet" data-close type="button">Cancelar</button></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script><script src="js/icons.js"></script><script src="js/covers.js"></script><script src="js/layout.js"></script>
+<script>
+  L.mount({ active: 'painel' });
+  [['visao', 'home', 'Visão geral'], ['prod', 'box', 'Produtos'], ['vendas', 'chart', 'Vendas'], ['fin', 'wallet', 'Financeiro'], ['novo', 'plus', 'Novo produto']].forEach(([k, i, t]) => document.getElementById('n-' + k).innerHTML = icon(i, 20) + t);
+  document.getElementById('btn-novo').innerHTML = icon('plus', 18) + ' Publicar novo produto';
+  document.querySelector('#modal-saque .modal-x').innerHTML = icon('close', 22);
+
+  let saldo = ER.lerJSON('er_saldo', 3482.17);
+  const fmtData = d => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
+  function pintaSaldo() { document.getElementById('saldo').textContent = ER.brl(saldo); document.getElementById('a-liberar').textContent = ER.brl(924.6); document.getElementById('sacado').textContent = ER.brl(ER.lerJSON('er_sacado', 1200)); }
+  pintaSaldo();
+
+  // 30 dias de vendas: determinístico
+  const hoje = new Date(); const dias = []; let s = 42; const r = () => (s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  for (let i = 29; i >= 0; i--) { const d = new Date(hoje); d.setDate(hoje.getDate() - i); const base = [2, 1, 3, 4, 6, 9, 5][d.getDay()]; dias.push({ d, n: Math.max(0, Math.round(base + (r() - .4) * 5)) }); }
+  dias[21].n = 17;
+  const total = dias.reduce((a, x) => a + x.n, 0), max = dias.reduce((a, x) => x.n > a.n ? x : a, dias[0]);
+  document.getElementById('periodo').textContent = fmtData(dias[0].d) + ' a ' + fmtData(dias[29].d);
+  document.getElementById('graf-sub').textContent = total + ' vendas no período. O melhor dia foi ' + fmtData(max.d) + ', com ' + max.n + '.';
+
+  // gráfico de barras (uma série, sem legenda: o título nomeia)
+  const W = 640, H = 220, ml = 28, mb = 26, mt = 18, iw = W - ml, ih = H - mb - mt, topo = Math.ceil((max.n + 1) / 5) * 5, bw = iw / 30;
+  let g = '';
+  for (let v = 0; v <= topo; v += topo / 5) { const y = mt + ih - v / topo * ih; g += `<line class="grid" x1="${ml}" x2="${W}" y1="${y}" y2="${y}"/><text x="${ml - 8}" y="${y + 4}" text-anchor="end">${v}</text>`; }
+  dias.forEach((x, i) => {
+    const h = x.n / topo * ih, bx = ml + i * bw + 2, w = bw - 4, y = mt + ih - h, isMax = x === max;
+    if (h > 0) g += `<path class="bar${isMax ? ' max' : ''}" data-i="${i}" d="M${bx} ${mt + ih}V${y + 4}q0-4 4-4h${w - 8}q4 0 4 4V${mt + ih}z"/>`;
+    g += `<rect class="hit" data-i="${i}" x="${ml + i * bw}" y="${mt}" width="${bw}" height="${ih}" fill="transparent"/>`;
+    if (i % 6 === 0 || i === 29) g += `<text x="${bx + w / 2}" y="${H - 6}" text-anchor="middle">${fmtData(x.d)}</text>`;
+  });
+  g += `<text x="${ml + dias.indexOf(max) * bw + bw / 2}" y="${mt + ih - max.n / topo * ih - 6}" text-anchor="middle" style="fill:var(--ink);font-weight:600">${max.n}</text>`;
+  const box = document.getElementById('graf');
+  box.innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de barras com as vendas por dia nos últimos 30 dias. Total de ${total} vendas.">${g}</svg><div class="chart-tip" hidden></div>`;
+  const tip = box.querySelector('.chart-tip'), svg = box.querySelector('svg');
+  svg.addEventListener('pointermove', e => {
+    const h = e.target.closest('.hit'); if (!h) { tip.hidden = true; return; }
+    const x = dias[+h.dataset.i], liq = x.n * ER.taxaLiquido(29).liquido;
+    tip.innerHTML = `${x.d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })}<br><b>${x.n} ${x.n === 1 ? 'venda' : 'vendas'}</b>, ${ER.brl(liq)}`;
+    const br = box.getBoundingClientRect(), hr = h.getBoundingClientRect(); tip.hidden = false;
+    tip.style.left = (hr.left - br.left + hr.width / 2) + 'px'; tip.style.topo = (e.clientY - br.topo) + 'px';
+  });
+  svg.addEventListener('pointerleave', () => { tip.hidden = true; });
+  document.getElementById('tabela-graf').innerHTML = `<table><thead><tr><th>Dia</th><th class="num">Vendas</th></tr></thead><tbody>${dias.slice().reverse().map(x => `<tr><td>${x.d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}</td><td class="num">${x.n}</td></tr>`).join('')}</tbody></table>`;
+  const alt = document.getElementById('alt');
+  alt.onclick = () => { const on = alt.getAttribute('aria-pressed') !== 'true'; alt.setAttribute('aria-pressed', on); alt.textContent = on ? 'Ver como gráfico' : 'Ver como tabela'; box.hidden = on; document.getElementById('tabela-graf').hidden = !on; };
+
+  // vendas recentes
+  const compradores = ['Marcelo Tavares', 'Josiane Prado', 'Antônio Beltrão', 'Camila Duarte', 'Wagner Lopes', 'Luísa Fontenele', 'Otávio Reis', 'Isadora Mello'];
+  const formas = ['Pix', 'Pix', 'Cartão 3x', 'Pix', 'Boleto', 'Cartão', 'Pix', 'Pix'];
+  const sit = ['ok', 'ok', 'ok', 'ok', 'warn', 'ok', 'err', 'ok'];
+  const sitTxt = { ok: 'Aprovada', warn: 'Aguardando boleto', err: 'Reembolso pedido' };
+  const liq = ER.taxaLiquido(24.9).liquido;
+  document.getElementById('vendas-tb').innerHTML = compradores.map((c, i) => `<tr><td class="nowrap">${i === 0 ? 'Hoje, 09:41' : i < 3 ? 'Hoje, 0' + (9 - i) + ':' + (12 + i * 7) : 'Ontem'}</td><td>${c}</td><td>O Peso das Manhãs Curtas</td><td>${formas[i]}</td><td class="num nowrap">${ER.brl(liq)}</td><td><span class="tag tag-${sit[i]}">${sitTxt[sit[i]]}</span></td></tr>`).join('');
+
+  // produtos
+  const meusProds = ER.lerJSON(ER.USER_KEY, []).concat([ER.porId('o-peso-das-manhas-curtas')]);
+  document.getElementById('prods').innerHTML = meusProds.map(p => `<div class="prod-row"><div>${coverSVG(p)}</div><div><h3>${escHTML(p.titulo)}</h3><small>${ER.brl(p.preco)}, ${p.vendas ? p.vendas + ' vendas' : 'ainda sem vendas'}</small></div><span class="tag tag-ok">Publicado</span></div>`).join('');
+
+  // saque
+  const mdl = document.getElementById('modal-saque'); L.bindModal(mdl);
+  mdl.addEventListener('click', e => { if (e.target.closest('[data-close]')) L.closeModal(mdl); });
+  const vs = document.getElementById('valor-saque'), field = vs.closest('.field');
+  document.getElementById('sacar').onclick = () => { vs.value = saldo.toFixed(2).replace('.', ','); document.getElementById('ms-hint').textContent = 'Saldo disponível: ' + ER.brl(saldo) + '. Mínimo de R$ 20,00.'; field.classList.remove('invalid'); L.openModal(mdl); vs.focus(); };
+  document.getElementById('confirma-saque').onclick = () => {
+    const v = parseFloat(vs.value.replace(/\./g, '').replace(',', '.'));
+    const erro = document.getElementById('ms-erro');
+    if (!(v >= 20)) { erro.textContent = 'O saque mínimo é R$ 20,00.'; field.classList.add('invalid'); return; }
+    if (v > saldo) { erro.textContent = 'Você só tem ' + ER.brl(saldo) + ' disponíveis.'; field.classList.add('invalid'); return; }
+    saldo = +(saldo - v).toFixed(2); ER.gravarJSON('er_saldo', saldo); ER.gravarJSON('er_sacado', ER.lerJSON('er_sacado', 1200) + v);
+    pintaSaldo(); L.closeModal(mdl); L.toast('Saque de ' + ER.brl(v) + ' solicitado. Cai em até 2 dias úteis.');
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finalizar compra | entre linhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main class="wrap">
+  <form class="checkout" id="form" novalidate>
+    <div>
+      <h1>Falta pouco para começar a ler.</h1>
+
+      <div class="step-title"><span>1</span><h2>Seus dados</h2></div>
+      <div class="field"><label for="nome">Nome completo</label><input id="nome" name="nome" autocomplete="name" required><span class="msg">Escreva seu nome e sobrenome.</span></div>
+      <div class="field"><label for="email">E-mail <span class="hint">é para lá que o arquivo vai</span></label><input id="email" name="email" type="email" autocomplete="email" inputmode="email" required><span class="msg">Esse e-mail parece incompleto. Confira se tem @ e o final, como .com.br.</span></div>
+      <div class="field-row">
+        <div class="field"><label for="cpf">CPF</label><input id="cpf" name="cpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" required><span class="msg">Digite os 11 números do CPF.</span></div>
+        <div class="field"><label for="cel">Celular <span class="hint">opcional</span></label><input id="cel" name="cel" inputmode="tel" placeholder="(81) 90000-0000" maxlength="15" autocomplete="tel"></div>
+      </div>
+
+      <div class="step-title"><span>2</span><h2>Como você quer pagar</h2></div>
+      <div class="pay-tabs" role="tablist" aria-label="Forma de pagamento">
+        <button type="button" class="pay-tab" role="tab" id="tab-pix" aria-selected="true" aria-controls="pay-pix">Pix</button>
+        <button type="button" class="pay-tab" role="tab" id="tab-cartao" aria-selected="false" aria-controls="pay-cartao" tabindex="-1">Cartão</button>
+        <button type="button" class="pay-tab" role="tab" id="tab-boleto" aria-selected="false" aria-controls="pay-boleto" tabindex="-1">Boleto</button>
+      </div>
+      <div class="pay-panel" id="pay-pix" role="tabpanel" aria-labelledby="tab-pix">
+        <div class="qr">
+          <div id="qr"></div>
+          <div>
+            <p style="margin-bottom:6px"><b>Pague pelo app do seu banco</b></p>
+            <p class="muted small">Abra o app, escolha Pix, leia o QR Code ou cole o código abaixo. Assim que o banco confirmar, o arquivo é liberado.</p>
+            <div class="pix-code"><input readonly id="pix-code" aria-label="Código Pix copia e cola" value=""><button type="button" class="btn btn-ghost" id="copiar">Copiar</button></div>
+            <p class="xs muted" style="margin:10px 0 0">O código vale por 30 minutos.</p>
+          </div>
+        </div>
+      </div>
+      <div class="pay-panel" id="pay-cartao" role="tabpanel" aria-labelledby="tab-cartao" hidden>
+        <div class="field"><label for="cnum">Número do cartão</label><input id="cnum" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" maxlength="19"><span class="msg">O número do cartão tem 16 dígitos.</span></div>
+        <div class="field"><label for="cnome">Nome como está no cartão</label><input id="cnome" autocomplete="cc-name"><span class="msg">Digite o nome impresso no cartão.</span></div>
+        <div class="field-row r3">
+          <div class="field"><label for="cval">Validade</label><input id="cval" inputmode="numeric" placeholder="MM/AA" maxlength="5" autocomplete="cc-exp"><span class="msg">Use o formato MM/AA.</span></div>
+          <div class="field"><label for="ccvv">CVV</label><input id="ccvv" inputmode="numeric" maxlength="4" autocomplete="cc-csc"><span class="msg">3 ou 4 dígitos.</span></div>
+          <div class="field"><label for="cparc">Parcelas</label><select id="cparc"></select></div>
+        </div>
+      </div>
+      <div class="pay-panel" id="pay-boleto" role="tabpanel" aria-labelledby="tab-boleto" hidden>
+        <p style="margin-bottom:6px"><b>O boleto vence em 3 dias.</b></p>
+        <p class="muted small" style="margin:0">Depois de gerar, mandamos o boleto para o seu e-mail. O arquivo só é liberado quando o banco confirmar o pagamento, o que pode levar até 2 dias úteis.</p>
+      </div>
+
+      <label class="bump" id="bump" for="bump-chk"></label>
+
+      <button class="btn btn-lg btn-block mt-2" type="submit" id="pagar"></button>
+      <p class="xs muted" style="margin-top:14px">Ao comprar você concorda com os termos de uso. O reembolso pode ser pedido em até 7 dias, respondendo ao e-mail do recibo.</p>
+    </div>
+
+    <aside class="summary" aria-label="Resumo do pedido" id="resumo"></aside>
+  </form>
+</main>
+<script src="js/data.js"></script><script src="js/icons.js"></script><script src="js/covers.js"></script><script src="js/layout.js"></script>
+<script>
+  L.mount({ checkout: true });
+  const id = new URLSearchParams(location.search).get('id');
+  const l = ER.porId(id) || ER.LIVROS[0];
+  const bumpBook = ER.porId(l.id === 'pack-notion-para-leitores' ? 'sem-filtro-de-cidade-pequena' : 'pack-notion-para-leitores');
+  const BUMP_PRECO = 9.9;
+  document.title = 'Comprar ' + l.titulo + ' | entre linhas';
+  const $ = s => document.querySelector(s);
+
+  $('#tab-pix').innerHTML = icon('pix', 18) + ' Pix';
+  $('#tab-cartao').innerHTML = icon('card', 18) + ' Cartão';
+  $('#tab-boleto').innerHTML = icon('boleto', 18) + ' Boleto';
+
+  $('#bump').innerHTML = `<input type="checkbox" id="bump-chk"><div><h4>Levar também: ${escHTML(bumpBook.titulo)}</h4><p>${escHTML(bumpBook.sub)} Só aqui, por ${ER.brl(BUMP_PRECO)} em vez de ${ER.brl(bumpBook.preco)}.</p></div><span class="price">+ ${ER.brl(BUMP_PRECO)}</span>`;
+
+  // QR fictício determinístico
+  function qr() {
+    const n = 29, cells = []; let s = 12345; const r = () => (s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+    const finder = (x, y) => { const dx = Math.min(x, n - 1 - x), dy = Math.min(y, n - 1 - y); return (x < 8 && y < 8) || (x > n - 9 && y < 8) || (x < 8 && y > n - 9); };
+    let out = '';
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      let on;
+      if (finder(x, y)) {
+        const fx = x < 8 ? x : x - (n - 8), fy = y < 8 ? y : y - (n - 8);
+        on = (fx === 0 || fx === 6 || fy === 0 || fy === 6 || (fx >= 2 && fx <= 4 && fy >= 2 && fy <= 4)) && fx < 7 && fy < 7;
+      } else on = r() > .52;
+      if (on) out += `<rect x="${x}" y="${y}" width="1.02" height="1.02"/>`;
+    }
+    return `<svg viewBox="-1 -1 ${n + 2} ${n + 2}" role="img" aria-label="QR Code de exemplo do Pix" fill="#221D17" shape-rendering="crispEdges">${out}</svg>`;
+  }
+  $('#qr').innerHTML = qr();
+  $('#pix-code').value = '00020126580014br.gov.bcb.pix0136' + (l.id.replace(/-/g, '').slice(0, 12)) + '5204000053039865802BR5915ENTRE LINHAS6007RECIFE62070503***6304' + 'A1F9';
+
+  let metodo = 'pix';
+  function total() { return l.preco + ($('#bump-chk').checked ? BUMP_PRECO : 0); }
+  function resumo() {
+    const t = total(), b = $('#bump-chk').checked;
+    $('#resumo').innerHTML = `
+      <div class="item"><div>${coverSVG(l)}</div><div><h3>${escHTML(l.titulo)}</h3><p class="small muted" style="margin:0">${escHTML(l.autor)}<br>${l.formatos.map(f => f[0]).join(' e ')}, entrega imediata</p></div><span class="price">${ER.brl(l.preco)}</span></div>
+      <dl>${b ? `<div><dt>${escHTML(bumpBook.titulo)}</dt><dd>${ER.brl(BUMP_PRECO)}</dd></div>` : ''}<div><dt>Entrega</dt><dd>Digital, sem frete</dd></div><div class="total"><dt>Total</dt><dd>${ER.brl(t)}</dd></div></dl>
+      <div class="guarantee">${icon('shield')}<p style="margin:0"><b>7 dias de garantia.</b> Se o arquivo não for o que você esperava, devolvemos o valor.</p></div>`;
+    $('#cparc').innerHTML = [1, 2, 3, 6, 12].filter(n => t / n >= 5).map(n => `<option value="${n}">${n}x de ${ER.brl(t / n)}${n === 1 ? ' à vista' : n <= 3 ? ' sem juros' : ''}</option>`).join('');
+    $('#pagar').textContent = metodo === 'pix' ? `Já paguei o Pix, liberar meu arquivo` : metodo === 'cartao' ? `Pagar ${ER.brl(t)}` : `Gerar boleto de ${ER.brl(t)}`;
+  }
+  $('#bump-chk').addEventListener('change', resumo); resumo();
+
+  const tabs = ['pix', 'cartao', 'boleto'];
+  function setPay(m) {
+    metodo = m;
+    tabs.forEach(t => { const on = t === m; const el = $('#tab-' + t); el.setAttribute('aria-selected', on); el.tabIndex = on ? 0 : -1; $('#pay-' + t).hidden = !on; });
+    resumo();
+  }
+  tabs.forEach((t, i) => { const el = $('#tab-' + t); el.onclick = () => setPay(t); el.onkeydown = e => { if (e.key === 'ArrowRight') { setPay(tabs[(i + 1) % 3]); $('#tab-' + tabs[(i + 1) % 3]).focus(); } if (e.key === 'ArrowLeft') { setPay(tabs[(i + 2) % 3]); $('#tab-' + tabs[(i + 2) % 3]).focus(); } }; });
+
+  $('#copiar').onclick = () => { navigator.clipboard && navigator.clipboard.writeText($('#pix-code').value).catch(() => {}); L.toast('Código Pix copiado'); };
+
+  // máscaras
+  const dig = v => v.replace(/\D/g, '');
+  $('#cpf').oninput = e => { const d = dig(e.target.value).slice(0, 11); e.target.value = d.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2'); };
+  $('#cel').oninput = e => { const d = dig(e.target.value).slice(0, 11); e.target.value = d.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d{1,4})$/, '$1-$2'); };
+  $('#cnum').oninput = e => { e.target.value = dig(e.target.value).slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 '); };
+  $('#cval').oninput = e => { const d = dig(e.target.value).slice(0, 4); e.target.value = d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d; };
+  $('#ccvv').oninput = e => { e.target.value = dig(e.target.value).slice(0, 4); };
+
+  function check(input, ok) { const f = input.closest('.field'); f.classList.toggle('invalid', !ok); input.setAttribute('aria-invalid', !ok); return ok; }
+  function validar() {
+    const r = [];
+    r.push(check($('#nome'), $('#nome').value.trim().split(/\s+/).length >= 2));
+    r.push(check($('#email'), /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test($('#email').value.trim())));
+    r.push(check($('#cpf'), dig($('#cpf').value).length === 11));
+    if (metodo === 'cartao') {
+      r.push(check($('#cnum'), dig($('#cnum').value).length === 16));
+      r.push(check($('#cnome'), $('#cnome').value.trim().length > 2));
+      r.push(check($('#cval'), /^(0[1-9]|1[0-2])\/\d{2}$/.test($('#cval').value)));
+      r.push(check($('#ccvv'), dig($('#ccvv').value).length >= 3));
+    }
+    return r.every(Boolean);
+  }
+  $('#form').addEventListener('input', e => { const f = e.target.closest('.field.invalid'); if (f) f.classList.remove('invalid'); });
+  $('#form').addEventListener('submit', e => {
+    e.preventDefault();
+    if (!validar()) { const first = document.querySelector('.field.invalid input'); if (first) first.focus(); L.toast('Confira os campos marcados em vermelho'); return; }
+    const btn = $('#pagar'); btn.disabled = true; btn.textContent = 'Confirmando com o banco...';
+    const pedido = { id: l.id, bump: $('#bump-chk').checked ? bumpBook.id : null, total: total(), metodo, email: $('#email').value.trim(), nome: $('#nome').value.trim(), numero: 'EL-' + (Date.now() % 1000000).toString().padStart(6, '0'), quando: new Date().toISOString() };
+    try { sessionStorage.setItem('er_pedido', JSON.stringify(pedido)); } catch (err) { }
+    if (metodo !== 'boleto') { ER.comprar(l.id); if (pedido.bump) ER.comprar(pedido.bump); }
+    setTimeout(() => { location.href = 'obrigado.html?id=' + l.id; }, 900);
+  });
+</script>
+</body>
+</html>

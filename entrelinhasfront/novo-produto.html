@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Publicar um produto | entre linhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .swatch-pick { display: flex; gap: 10px; flex-wrap: wrap; }
+  .swatch-pick label { cursor: pointer; }
+  .swatch-pick input { position: absolute; opacity: 0; }
+  .swatch-pick span { display: block; width: 44px; height: 60px; border: 2px solid transparent; outline: 1px solid var(--line-strong); outline-offset: 0; position: relative; }
+  .swatch-pick span::after { content: ''; position: absolute; right: 6px; bottom: 6px; width: 12px; height: 12px; background: var(--a); }
+  .swatch-pick input:checked + span { border-color: var(--paper); outline: 2.5px solid var(--navy); }
+  .swatch-pick input:focus-visible + span { box-shadow: var(--ring); }
+  .motif-pick { display: flex; gap: 8px; flex-wrap: wrap; }
+  .motif-pick label { cursor: pointer; }
+  .motif-pick input { position: absolute; opacity: 0; }
+  .motif-pick span { display: block; padding: 8px 14px; border: 1.5px solid var(--line-strong); font-size: .875rem; font-weight: 500; background: #FFFDF8; border-radius: 2px; }
+  .motif-pick input:checked + span { background: var(--navy); color: var(--paper); border-color: var(--navy); }
+  .motif-pick input:focus-visible + span { box-shadow: var(--ring); }
+  .file-item { display: grid; grid-template-columns: 28px 1fr auto auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .file-item .ic { color: var(--navy); }
+  .net-box { background: var(--paper-2); border-top: 4px solid var(--navy); padding: 18px 20px; margin-top: 8px; }
+  .net-box div { display: flex; justify-content: space-between; gap: 10px; font-size: .9375rem; }
+  .net-box .t { border-top: 1.5px solid var(--ink); margin-top: 8px; padding-top: 8px; font-weight: 600; }
+  .net-box .t span:last-child { font-family: var(--f-title); font-size: 1.375rem; color: var(--ok); font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="site-header"></div>
+<main class="wrap section-tight">
+  <div class="page-head" style="border:0;padding-top:16px">
+    <nav class="crumbs" aria-label="Você está em"><a href="painel.html">Painel do autor</a><span aria-hidden="true">/</span><span>Novo produto</span></nav>
+    <h1>Publicar um produto</h1>
+    <p class="lede" style="margin:0">Leva uns dez minutos. Você pode voltar em qualquer etapa antes de publicar.</p>
+  </div>
+
+  <div class="wizard mt-2">
+    <form id="wiz" novalidate>
+      <ol class="steps" id="steps">
+        <li><button type="button" data-go="0"><b>1</b><span>Sobre o produto</span></button></li>
+        <li><button type="button" data-go="1"><b>2</b><span>Arquivos</span></button></li>
+        <li><button type="button" data-go="2"><b>3</b><span>Preço e pagamento</span></button></li>
+        <li><button type="button" data-go="3"><b>4</b><span>Revisar e publicar</span></button></li>
+      </ol>
+
+      <section class="wizard-step" data-step="0" aria-labelledby="s0">
+        <h2 id="s0" style="font-size:1.5rem">Conte o que você está vendendo</h2>
+        <div class="field"><label for="titulo">Título</label><input id="titulo" maxlength="60" placeholder="Ex.: Guia de Feira para Quem Mora Sozinho"><span class="msg">Escreva um título com pelo menos 3 letras.</span></div>
+        <div class="field"><label for="sub">Uma frase que explica o título <span class="hint">opcional</span></label><input id="sub" maxlength="110" placeholder="Ex.: Vinte refeições da semana com uma compra só"></div>
+        <div class="field-row">
+          <div class="field"><label for="cat">Assunto</label><select id="cat"></select></div>
+          <div class="field"><label for="tipo">Tipo de produto</label><select id="tipo"><option>Livro digital</option><option>Guia ou apostila</option><option>Planilha ou modelo</option><option>Curso em vídeo</option><option>Áudio</option></select></div>
+        </div>
+        <div class="field"><label for="desc">Descrição</label><textarea id="desc" placeholder="O que o leitor vai encontrar? Para quem serve? Quanto tempo leva para ler?"></textarea><span class="hint">Escreva como se estivesse indicando para um amigo. Dois parágrafos bastam.</span><span class="msg">A descrição precisa ter ao menos 20 caracteres.</span></div>
+        <div class="field"><span class="lbl">Cor da capa</span><div class="swatch-pick" id="paletas"></div></div>
+        <div class="field"><span class="lbl">Desenho da capa</span><div class="motif-pick" id="motivos"></div></div>
+      </section>
+
+      <section class="wizard-step" data-step="1" aria-labelledby="s1" hidden>
+        <h2 id="s1" style="font-size:1.5rem">Envie os arquivos que o leitor vai baixar</h2>
+        <label class="drop" id="drop" for="arquivos"><span></span><div><b>Arraste os arquivos aqui ou clique para escolher</b><span class="muted small">PDF, EPUB, MP4, ZIP ou XLSX, até 500 MB cada.</span></div></label>
+        <input type="file" id="arquivos" multiple class="sr-only" accept=".pdf,.epub,.mp4,.zip,.xlsx,.mp3">
+        <p class="mt-1"><button type="button" class="btn-quiet small" id="exemplo">Usar arquivos de exemplo para testar</button></p>
+        <div id="arq-lista" class="mt-1" aria-live="polite"></div>
+        <p class="msg" id="arq-erro" style="display:none;color:var(--err);font-weight:500;font-size:.875rem">Envie pelo menos um arquivo para continuar.</p>
+      </section>
+
+      <section class="wizard-step" data-step="2" aria-labelledby="s2" hidden>
+        <h2 id="s2" style="font-size:1.5rem">Defina o preço e como o leitor paga</h2>
+        <div class="field" style="max-width:260px"><label for="preco">Preço</label><div class="money"><input id="preco" inputmode="decimal" value="24,90"></div><span class="msg">O preço mínimo é R$ 5,00.</span></div>
+        <div class="net-box" id="net" aria-live="polite" style="max-width:420px"></div>
+        <div class="mt-2">
+          <label class="switch"><span><b>Pix</b><small>Aprovação na hora</small></span><input type="checkbox" checked></label>
+          <label class="switch"><span><b>Cartão de crédito</b><small>Até 12x, o leitor paga os juros do parcelamento</small></span><input type="checkbox" checked></label>
+          <label class="switch"><span><b>Boleto</b><small>Libera o arquivo em até 2 dias úteis</small></span><input type="checkbox"></label>
+        </div>
+        <div class="field mt-1" style="max-width:260px"><label for="garantia">Garantia</label><select id="garantia"><option>7 dias</option><option>15 dias</option><option>30 dias</option></select><span class="hint">O mínimo por lei é de 7 dias.</span></div>
+      </section>
+
+      <section class="wizard-step" data-step="3" aria-labelledby="s3" hidden>
+        <h2 id="s3" style="font-size:1.5rem">Confira antes de publicar</h2>
+        <ul class="check-list" id="revisao"></ul>
+        <p class="muted small mt-2">Depois de publicado, o produto aparece no catálogo e ganha um link de venda. Você pode editar o preço e a descrição quando quiser.</p>
+      </section>
+
+      <div class="wizard-nav"><button type="button" class="btn btn-ghost" id="voltar">Voltar</button><button type="button" class="btn" id="avancar">Continuar</button></div>
+    </form>
+
+    <aside class="preview" aria-label="Pré-visualização no catálogo">
+      <h2 style="font-size:1.125rem">Como vai aparecer no catálogo</h2>
+      <div class="card-prev" id="prev"></div>
+    </aside>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="js/data.js"></script><script src="js/icons.js"></script><script src="js/covers.js"></script><script src="js/layout.js"></script>
+<script>
+  L.mount({ active: 'painel' });
+  const $ = s => document.querySelector(s);
+  $('.drop span').innerHTML = icon('upload', 40);
+  $('#cat').innerHTML = ER.CATEGORIAS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+  $('#paletas').innerHTML = COVER_PALETTES.map((p, i) => `<label><input type="radio" name="pal" value="${i}" aria-label="Paleta ${i + 1}"${i === 0 ? ' checked' : ''}><span style="background:${p.bg};--a:${p.ac}"></span></label>`).join('');
+  const MOT = { linhas: 'Linhas', arco: 'Arcos', onda: 'Ondas', sol: 'Sol', grade: 'Grade', barras: 'Barras', casa: 'Casa' };
+  $('#motivos').innerHTML = Object.entries(MOT).map(([k, v], i) => `<label><input type="radio" name="mot" value="${k}"${i === 0 ? ' checked' : ''}><span>${v}</span></label>`).join('');
+
+  const arquivos = [];
+  const fmtSize = b => b > 1e6 ? (b / 1e6).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB';
+  function pintaArquivos() {
+    $('#arq-lista').innerHTML = arquivos.map((a, i) => `<div class="file-item">${icon('epub')}<span><b>${escHTML(a.nome)}</b></span><small class="muted">${a.tam}</small><button type="button" class="btn-quiet small" data-rm="${i}" aria-label="Remover ${escHTML(a.nome)}">Remover</button></div>`).join('');
+    $('#arq-erro').style.display = 'none';
+    prev();
+  }
+  $('#arquivos').onchange = e => { [...e.target.files].forEach(f => arquivos.push({ nome: f.name, tam: fmtSize(f.size), ext: f.name.split('.').pop().toUpperCase() })); pintaArquivos(); };
+  $('#exemplo').onclick = () => { arquivos.push({ nome: 'livro-final.epub', tam: '1,6 MB', ext: 'EPUB' }, { nome: 'livro-final.pdf', tam: '2,4 MB', ext: 'PDF' }); pintaArquivos(); };
+  $('#arq-lista').onclick = e => { const b = e.target.closest('[data-rm]'); if (b) { arquivos.splice(+b.dataset.rm, 1); pintaArquivos(); } };
+  const drop = $('#drop');
+  ['dragover', 'dragenter'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e => { [...e.dataTransfer.files].forEach(f => arquivos.push({ nome: f.name, tam: fmtSize(f.size), ext: f.name.split('.').pop().toUpperCase() })); pintaArquivos(); });
+
+  const val = id => $('#' + id).value.trim();
+  const precoNum = () => parseFloat(val('preco').replace(/\./g, '').replace(',', '.')) || 0;
+  function draft() {
+    const pal = COVER_PALETTES[+document.querySelector('[name=pal]:checked').value], mot = document.querySelector('[name=mot]:checked').value;
+    const t = val('titulo') || 'Título do seu livro';
+    return { id: 'novo-' + (t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'produto'), titulo: t, sub: val('sub'), autor: 'Helena Arruda Moura', cat: $('#cat').value, preco: precoNum() || 0, capa: Object.assign({ motif: mot }, pal) };
+  }
+  function prev() {
+    const d = draft();
+    $('#prev').innerHTML = `<div class="shelf">${coverSVG(d)}</div><h3>${escHTML(d.titulo)}</h3><p class="small muted" style="margin:0">${escHTML(d.autor)}</p><p class="small" style="margin:6px 0 0"><span class="price" style="font-size:1.1875rem">${ER.brl(d.preco)}</span></p>${arquivos.length ? `<p class="xs muted" style="margin:8px 0 0">${arquivos.map(a => a.ext).filter((v, i, r) => r.indexOf(v) === i).join(' e ')} para baixar</p>` : ''}`;
+    const { taxa, liquido } = ER.taxaLiquido(d.preco);
+    $('#net').innerHTML = d.preco >= 5 ? `<div><span>Leitor paga</span><span>${ER.brl(d.preco)}</span></div><div><span class="muted">Taxa (7,9% + R$ 1,00)</span><span class="muted">− ${ER.brl(taxa)}</span></div><div class="t"><span>Você recebe</span><span>${ER.brl(liquido)}</span></div>` : '<div class="muted">Digite um preço de pelo menos R$ 5,00 para ver quanto você recebe.</div>';
+  }
+  $('#wiz').addEventListener('input', prev); $('#wiz').addEventListener('change', prev);
+
+  let step = 0;
+  const secs = [...document.querySelectorAll('.wizard-step')], bts = [...document.querySelectorAll('#steps button')];
+  const done = [false, false, false, false];
+  function validaPasso(n) {
+    if (n === 0) { const a = val('titulo').length >= 3, b = val('desc').length >= 20; $('#titulo').closest('.field').classList.toggle('invalid', !a); $('#desc').closest('.field').classList.toggle('invalid', !b); if (!a) $('#titulo').focus(); else if (!b) $('#desc').focus(); return a && b; }
+    if (n === 1) { const ok = arquivos.length > 0; $('#arq-erro').style.display = ok ? 'none' : 'block'; return ok; }
+    if (n === 2) { const ok = precoNum() >= 5; $('#preco').closest('.field').classList.toggle('invalid', !ok); if (!ok) $('#preco').focus(); return ok; }
+    return true;
+  }
+  function go(n) {
+    if (n > step) for (let i = step; i < n; i++) { if (!validaPasso(i)) { n = i; break; } done[i] = true; }
+    step = n;
+    secs.forEach((s, i) => s.hidden = i !== step);
+    bts.forEach((b, i) => { b.removeAttribute('aria-current'); if (i === step) b.setAttribute('aria-current', 'step'); b.parentElement.classList.toggle('done', done[i] && i !== step); });
+    $('#voltar').style.visibility = step === 0 ? 'hidden' : 'visible';
+    $('#avancar').textContent = step === 3 ? 'Publicar agora' : 'Continuar';
+    if (step === 3) revisao();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function revisao() {
+    const d = draft(), item = (ok, t) => `<li class="${ok ? 'ok' : ''}">${icon('check', 20)}<span>${t}</span></li>`;
+    $('#revisao').innerHTML = item(val('titulo').length >= 3, `Título: <b>${escHTML(d.titulo)}</b>, no assunto ${ER.catNome(d.cat)}`) + item(val('desc').length >= 20, 'Descrição escrita') + item(arquivos.length > 0, `${arquivos.length} ${arquivos.length === 1 ? 'arquivo enviado' : 'arquivos enviados'}`) + item(d.preco >= 5, `Preço de ${ER.brl(d.preco)}, você recebe ${ER.brl(ER.taxaLiquido(d.preco).liquido)} por venda`) + item(true, `Garantia de ${$('#garantia').value}`);
+  }
+  bts.forEach(b => b.onclick = () => go(+b.dataset.go));
+  $('#voltar').onclick = () => go(Math.max(0, step - 1));
+  $('#avancar').onclick = () => {
+    if (step < 3) return go(step + 1);
+    for (let i = 0; i < 3; i++) if (!validaPasso(i)) return go(i);
+    const d = draft(), lista = ER.lerJSON(ER.USER_KEY, []);
+    const tipoTxt = val('tipo') === 'Curso em vídeo' ? 'Curso em vídeo' : val('tipo') === 'Planilha ou modelo' ? 'Modelo' : null;
+    const novo = Object.assign(d, { linhas: null, nota: 0, aval: 0, vendas: 0, paginas: null, tipo: tipoTxt, formatos: arquivos.map(a => [a.ext, a.tam]), novo: true, bio: 'Autora publicada na entre linhas.', desc: val('desc').split(/\n+/).filter(Boolean), trecho: [], sumario: [], avaliacoes: [] });
+    delete novo.linhas;
+    if (lista.find(x => x.id === novo.id)) novo.id += '-' + Date.now().toString(36).slice(-3);
+    lista.unshift(novo); ER.gravarJSON(ER.USER_KEY, lista);
+    L.toast('Publicado. “' + novo.titulo + '” já está no catálogo.');
+    setTimeout(() => { location.href = 'produto.html?id=' + novo.id; }, 1100);
+  };
+  prev(); go(0);
+</script>
+</body>
+</html>

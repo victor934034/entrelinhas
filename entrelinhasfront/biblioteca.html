@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minha estante | entre linhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main class="wrap">
+  <div class="page-head" style="border:0;padding-bottom:0">
+    <div class="lib-head">
+      <div><h1>Boa noite, Marcelo.</h1><p class="lede" style="margin:0" id="resumo"></p></div>
+      <a class="btn btn-ghost" href="catalogo.html">Achar o próximo livro</a>
+    </div>
+  </div>
+  <div class="lib-grid">
+    <div>
+      <section class="reading" id="lendo" aria-label="Continuar leitura"></section>
+      <div class="split-head"><h2 style="font-size:1.5rem">Todos os seus arquivos</h2><label class="small muted" style="display:flex;gap:8px;align-items:center">Mostrar <select id="filtro" style="height:38px;padding:0 30px 0 10px;border:1.5px solid var(--line-strong);background:var(--paper);border-radius:2px;font:inherit"><option value="todos">Todos</option><option value="andamento">Em andamento</option><option value="novos">Ainda não abertos</option></select></label></div>
+      <div class="shelf-row" id="prateleira"></div>
+    </div>
+    <aside class="marks" aria-labelledby="h-marks">
+      <h2 id="h-marks" style="font-size:1.375rem">Trechos que você marcou</h2>
+      <blockquote><p><span class="ribbon"></span>Bordas contam o que o desenho quer esconder.</p><footer>Caderno de Bordas, Iara Quintela</footer></blockquote>
+      <blockquote><p><span class="ribbon"></span>A primeira aba deste método não pergunta quanto você ganha. Ela pergunta quanto você precisa para não entrar em pânico.</p><footer>Planilhas que Sobrevivem a Março, Rafael Tenório</footer></blockquote>
+      <blockquote><p><span class="ribbon"></span>Se você só sabe cozinhar para duas pessoas, comece por aqui: a quantidade certa é a que sobra.</p><footer>Vinte e Três Receitas de Domingo, Cidinha Lopes</footer></blockquote>
+      <p class="small muted">Para marcar um trecho, selecione o texto no leitor e toque no marcador.</p>
+    </aside>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="js/data.js"></script><script src="js/icons.js"></script><script src="js/covers.js"></script><script src="js/layout.js"></script>
+<script>
+  L.mount({ active: 'biblioteca' });
+  const meus = ER.biblioteca().map(b => Object.assign({}, ER.porId(b.id), b)).filter(b => b.titulo);
+  const andamento = meus.filter(b => b.progresso > 0 && b.progresso < 100);
+  document.getElementById('resumo').textContent = `${meus.length} ${meus.length === 1 ? 'arquivo' : 'arquivos'} na estante, ${andamento.length} em andamento.`;
+
+  const atual = andamento.slice().sort((a, b) => b.progresso - a.progresso)[0] || meus[0];
+  document.getElementById('lendo').innerHTML = atual ? `
+    <a href="produto.html?id=${atual.id}">${coverSVG(atual, { cls: 'cover-lift' })}</a>
+    <div>
+      <span class="tag tag-navy">Continuar de onde parou</span>
+      <h2 style="margin-top:12px">${escHTML(atual.titulo)}</h2>
+      <p class="muted" style="margin:0">${escHTML(atual.autor)}</p>
+      <div class="progress" style="--p:${atual.progresso}%" role="progressbar" aria-valuenow="${atual.progresso}" aria-valuemin="0" aria-valuemax="100" aria-label="Progresso de leitura"></div>
+      <p class="small muted">${atual.progresso}% lido. Parou em: ${escHTML(atual.ultimo)}.</p>
+      <div class="row-flex"><button class="btn" data-abrir="${escHTML(atual.titulo)}">Continuar lendo</button><button class="btn-quiet" data-baixar="${escHTML(atual.titulo)}">Baixar o arquivo</button></div>
+    </div>` : '';
+
+  function lista() {
+    const f = document.getElementById('filtro').value;
+    const r = meus.filter(b => f === 'todos' || (f === 'andamento' ? b.progresso > 0 && b.progresso < 100 : b.progresso === 0));
+    document.getElementById('prateleira').innerHTML = r.length ? r.map(b => `
+      <div class="owned">
+        <div class="shelf">${coverSVG(b)}</div>
+        <h3>${escHTML(b.titulo)}</h3>
+        <div class="progress thin" style="--p:${b.progresso}%"></div>
+        <span class="xs muted">${b.progresso === 0 ? 'Ainda não aberto' : b.progresso + '% lido'}</span>
+        <div class="acts"><button class="btn-quiet" data-abrir="${escHTML(b.titulo)}">${b.progresso ? 'Continuar' : 'Abrir'}</button>${b.formatos.map(x => `<button class="btn-quiet" data-baixar="${escHTML(b.titulo)}.${x[0].toLowerCase()}">${x[0]}</button>`).join('')}</div>
+      </div>`).join('') : '<div class="empty" style="grid-column:1/-1"><h3>Nada nesta prateleira</h3><p class="muted">Você ainda não tem arquivos nesse estado. Mude o filtro ou escolha um novo livro no catálogo.</p></div>';
+  }
+  document.getElementById('filtro').onchange = lista; lista();
+  document.addEventListener('click', e => {
+    const a = e.target.closest('[data-abrir]'), d = e.target.closest('[data-baixar]');
+    if (a) L.toast('Abrindo “' + a.dataset.abrir + '” no leitor');
+    if (d) L.toast('Download iniciado: ' + d.dataset.baixar);
+  });
+</script>
+</body>
+</html>

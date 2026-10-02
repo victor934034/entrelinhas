@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>entre linhas | Livros e produtos digitais de autores independentes</title>
+<meta name="description" content="Ebooks, guias, planilhas e minicursos de autores independentes. Pague com Pix, receba o arquivo na hora.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+
+<main id="conteudo">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <h1>Leia o que ninguém te indicou ainda.</h1>
+        <p class="lede">Ebooks, guias, planilhas e minicursos de autores independentes. Você paga, baixa e lê na mesma hora. O autor fica com 92% de cada venda.</p>
+        <div class="hero-actions">
+          <a class="btn btn-lg" href="catalogo.html">Ver o catálogo</a>
+          <a class="btn-quiet" href="painel.html">Quero vender o meu livro</a>
+        </div>
+        <div class="hero-note" id="hero-note"></div>
+      </div>
+      <div class="hero-art on-navy" aria-label="Três capas de livros do catálogo">
+        <div class="hero-tag"><b>Na estante desta semana</b>Mapas de Uma Casa Vazia, poemas de Nádia Ferrão, R$&nbsp;12,00</div>
+        <div class="fan" id="hero-fan"></div>
+        <div class="sill"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-tight" aria-labelledby="h-lombadas">
+    <div class="wrap"><div class="split-head"><h2 id="h-lombadas">Escolha pela lombada</h2><a class="btn-quiet" href="catalogo.html">Ver tudo de uma vez</a></div></div>
+    <div class="wrap"><div class="shelf-line"><div class="spines" id="spines"></div><aside><p>Ninguém precisa saber o nome do autor para começar. Puxe uma lombada.</p><small>Cada uma abre a prateleira com os títulos daquele assunto.</small></aside></div><div class="shelf-rule"></div></div>
+  </section>
+
+  <section class="section" aria-labelledby="h-novos">
+    <div class="wrap">
+      <div class="split-head"><h2 id="h-novos">Chegaram esta semana</h2></div>
+      <div class="arrivals">
+        <div><article class="feature" id="feature"></article><div class="mini" id="mini"></div></div>
+        <div class="grid-2x2" id="novos"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-tight" aria-labelledby="h-vendidos">
+    <div class="wrap">
+      <div class="split-head"><h2 id="h-vendidos">O que mais saiu nos últimos 7 dias</h2></div>
+      <div class="rank" id="rank"></div>
+    </div>
+  </section>
+
+  <section class="author-band on-navy" id="taxas" style="margin-top:clamp(48px,7vw,96px)">
+    <div class="wrap">
+      <div>
+        <h2>Escreveu algo? Coloque à venda hoje à noite.</h2>
+        <p class="lede">Suba o arquivo, defina o preço e compartilhe o link. Não tem mensalidade: cobramos 7,9% mais R$&nbsp;1,00 só quando você vende.</p>
+        <ul>
+          <li><span data-ic="pix"></span><span>Pix, cartão em até 12x e boleto no mesmo checkout.</span></li>
+          <li><span data-ic="coin"></span><span>Saque via Pix em até 2 dias úteis, a partir de R$&nbsp;20,00.</span></li>
+          <li><span data-ic="shield"></span><span>Arquivo protegido com o e-mail do comprador, sem DRM que atrapalhe a leitura.</span></li>
+        </ul>
+        <p style="margin-top:28px"><a class="btn btn-paper btn-lg" href="novo-produto.html">Publicar meu primeiro produto</a></p>
+      </div>
+      <form class="calc" onsubmit="return false" aria-label="Simulador de ganho por venda">
+        <label for="calc-preco"><span>Se o seu livro custar</span><output id="calc-out" for="calc-preco">R$ 25,00</output></label>
+        <input id="calc-preco" type="range" min="9" max="150" step="1" value="25">
+        <dl>
+          <div><dt>Preço pago pelo leitor</dt><dd id="c-preco"></dd></div>
+          <div><dt>Taxa da entre linhas (7,9% + R$ 1,00)</dt><dd id="c-taxa"></dd></div>
+          <div class="net"><dt>Você recebe por venda</dt><dd id="c-liq"></dd></div>
+          <div><dt>Em 50 vendas no mês</dt><dd id="c-50"></dd></div>
+        </dl>
+      </form>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="h-vozes">
+    <div class="wrap">
+      <h2 id="h-vozes" class="sr-only">Quem já usa</h2>
+      <div class="voices">
+        <figure class="voice-big" style="margin:0">
+          <blockquote style="margin:0"><p>Vendi 214 cópias do meu primeiro livro em cinco semanas, sem nunca ter feito um anúncio. Só mandei o link para os grupos de leitura em que eu já estava.</p></blockquote>
+          <cite><b>Helena Arruda Moura</b>, autora de “O Peso das Manhãs Curtas”, Belo Horizonte</cite>
+        </figure>
+        <figure class="voice-small" style="margin:0">
+          <blockquote style="margin:0"><p>Comprei o guia de MEI às 23h de um domingo, paguei no Pix e já estava lendo antes de terminar o café.</p></blockquote>
+          <cite><b>Eunice Barbosa</b>, costureira, Caruaru</cite>
+        </figure>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="js/data.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/covers.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  L.mount({ active: '' });
+  document.querySelectorAll('[data-ic]').forEach(e => e.innerHTML = icon(e.dataset.ic, 22));
+
+  document.getElementById('hero-note').innerHTML = icon('shield') + '<span>Comprou e não gostou? Você tem 7 dias para pedir o dinheiro de volta, direto no e-mail do recibo, sem formulário.</span>';
+
+  const get = id => ER.porId(id);
+  document.getElementById('hero-fan').innerHTML =
+    ['caderno-de-bordas', 'mapas-de-uma-casa-vazia', 'vinte-e-tres-receitas-de-domingo']
+      .map((id, i) => coverSVG(get(id), { cls: 'c' + (i + 1) })).join('');
+
+  document.getElementById('spines').innerHTML = ER.CATEGORIAS.map(c =>
+    `<a class="spine${c.lite ? ' lite' : ''}" href="catalogo.html?cat=${c.id}" style="background:${c.cor};height:${c.altura}px">${c.nome}</a>`).join('');
+
+  const f = get('o-peso-das-manhas-curtas');
+  document.getElementById('feature').innerHTML = `
+    <a href="produto.html?id=${f.id}" aria-label="${escHTML(f.titulo)}">${coverSVG(f, { cls: 'cover-lift' })}</a>
+    <div>
+      <span class="tag tag-navy">Livro da semana</span>
+      <h3 style="margin-top:12px">${escHTML(f.titulo)}</h3>
+      <p class="muted small" style="margin:0">${escHTML(f.autor)}, ${f.paginas} páginas</p>
+      <blockquote>${escHTML(f.trecho[0].split('. ')[0])}.</blockquote>
+      <div class="row"><span class="price">${ER.brl(f.preco)}</span><a class="btn" href="produto.html?id=${f.id}">Ler as primeiras páginas</a></div>
+    </div>`;
+
+  document.getElementById('mini').innerHTML = '<h3>Também chegaram</h3>' + ['python-para-noites-livres', 'a-ultima-balsa-de-marajo', 'pack-notion-para-leitores'].map(id => { const l = get(id); return `<a href="produto.html?id=${l.id}"><div>${coverSVG(l)}</div><span><b>${escHTML(l.titulo)}</b><small>${escHTML(l.autor)}</small></span><span class="price">${ER.brl(l.preco)}</span></a>`; }).join('');
+
+  document.getElementById('novos').innerHTML = ['sem-filtro-de-cidade-pequena', 'mapas-de-uma-casa-vazia', 'guia-do-primeiro-livro-independente', 'fotografia-com-luz-de-janela']
+    .map(id => L.bookCard(get(id))).join('');
+
+  document.getElementById('rank').innerHTML = ER.LIVROS.slice().sort((a, b) => b.vendas - a.vendas).slice(0, 8).map(l => `
+    <a href="produto.html?id=${l.id}">
+      <div>${coverSVG(l)}</div>
+      <div><h4>${escHTML(l.titulo)}</h4><p>${escHTML(l.autor)}</p></div>
+      <span class="price">${ER.brl(l.preco)}</span>
+    </a>`).join('');
+
+  const r = document.getElementById('calc-preco');
+  function calc() {
+    const p = +r.value, { taxa, liquido } = ER.taxaLiquido(p);
+    document.getElementById('calc-out').textContent = ER.brl(p);
+    document.getElementById('c-preco').textContent = ER.brl(p);
+    document.getElementById('c-taxa').textContent = '− ' + ER.brl(taxa);
+    document.getElementById('c-liq').textContent = ER.brl(liquido);
+    document.getElementById('c-50').textContent = ER.brl(liquido * 50);
+  }
+  r.addEventListener('input', calc); calc();
+</script>
+</body>
+</html>

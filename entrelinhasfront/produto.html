@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Produto | entre linhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main class="wrap" id="produto"></main>
+
+<div class="modal-back" id="modal" role="dialog" aria-modal="true" aria-labelledby="m-titulo">
+  <div class="modal">
+    <button class="modal-x" aria-label="Fechar amostra"></button>
+    <h3 id="m-titulo">Amostra gratuita</h3>
+    <div class="fade-end"><div class="excerpt" id="m-texto"></div></div>
+    <div class="row-flex mt-2" id="m-cta"></div>
+  </div>
+</div>
+
+<div id="site-footer"></div>
+<script src="js/data.js"></script><script src="js/icons.js"></script><script src="js/covers.js"></script><script src="js/layout.js"></script>
+<script>
+  L.mount({ active: 'explorar' });
+  const id = new URLSearchParams(location.search).get('id');
+  const l = ER.porId(id) || ER.LIVROS[0];
+  document.title = l.titulo + ', ' + l.autor + ' | entre linhas';
+  const fmtIcon = f => f === 'MP4' ? 'play' : (f === 'EPUB' || f === 'PDF') ? 'epub' : 'file';
+  const parcela = ER.brl(l.preco / (l.preco >= 30 ? 3 : 2));
+  const parcelas = l.preco >= 30 ? 3 : 2;
+  const tipo = l.tipo || 'Livro digital';
+  const notas = l.avaliacoes || [];
+  const dist = [5, 4, 3, 2, 1].map(n => notas.length ? Math.round(notas.filter(a => a.nota === n).length / notas.length * 100) : 0);
+  // distribuição ilustrativa coerente com a nota média
+  const p5 = Math.round(l.nota * 22 - 28), p4 = Math.round((100 - p5) * .65), p3 = Math.round((100 - p5 - p4) * .6);
+  const pct = l.aval ? [p5, p4, p3, 1, 100 - p5 - p4 - p3 - 1] : dist;
+
+  document.getElementById('produto').innerHTML = `
+    <nav class="crumbs" style="padding-top:24px" aria-label="Você está em"><a href="index.html">Início</a><span aria-hidden="true">/</span><a href="catalogo.html?cat=${l.cat}">${ER.catNome(l.cat)}</a><span aria-hidden="true">/</span><span>${escHTML(l.titulo)}</span></nav>
+    <div class="product">
+      <div class="product-cover">${l.novo ? '<span class="corner">Novo</span>' : ''}${coverSVG(l)}</div>
+      <div class="product-info">
+        <span class="tag">${tipo}</span>
+        <h1 style="margin-top:12px">${escHTML(l.titulo)}</h1>
+        <p class="sub">${escHTML(l.sub || '')}</p>
+        <p style="margin:0">de <strong>${escHTML(l.autor)}</strong></p>
+        <ul class="meta">
+          ${l.aval ? `<li><b>${ER.num1(l.nota)} de 5</b><span>${l.aval} avaliações</span></li>` : '<li><b>Novo</b><span>ainda sem avaliações</span></li>'}
+          ${l.paginas ? `<li><b>${l.paginas}</b><span>páginas</span></li>` : `<li><b>${tipo === 'Modelo' ? '4 páginas' : '6 aulas'}</b><span>conteúdo</span></li>`}
+          <li><b>${l.formatos.map(f => f[0]).join(' e ')}</b><span>formatos</span></li>
+        </ul>
+        ${l.desc.map(p => `<p>${escHTML(p)}</p>`).join('')}
+        <h2 style="font-size:1.25rem;margin-top:32px">O que vem no arquivo</h2>
+        <ul class="files">${l.formatos.map(f => `<li>${icon(fmtIcon(f[0]))}<span><b>${escHTML(l.titulo)}</b>.${f[0].toLowerCase()}</span><small>${f[1]}</small></li>`).join('')}</ul>
+      </div>
+      <aside class="buybox-col"><div class="buybox">
+        <div>${l.de ? `<span class="old-price">${ER.brl(l.de)}</span>` : ''}<span class="price price-big">${ER.brl(l.preco)}</span></div>
+        <p class="installments">ou ${parcelas}x de ${parcela} no cartão, sem juros</p>
+        <a class="btn btn-lg btn-block" href="checkout.html?id=${l.id}">Comprar agora</a>
+        ${(l.trecho && l.trecho.length) ? '<button class="btn btn-ghost btn-block" id="amostra">Ler as primeiras páginas</button>' : ''}
+        <ul class="assure" id="garantia">
+          <li>${icon('pix')}<span>Pix aprovado na hora. O arquivo chega no seu e-mail e fica na sua estante.</span></li>
+          <li>${icon('shield')}<span><b>Garantia de 7 dias.</b> Não gostou, pedimos o reembolso ao autor por você.</span></li>
+          <li>${icon('lock')}<span>Compra protegida. Não guardamos os dados do seu cartão.</span></li>
+        </ul>
+      </div></aside>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Detalhes do produto">
+      <button class="tab" role="tab" id="t1" aria-selected="true" aria-controls="p1">Sobre o autor</button>
+      <button class="tab" role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">${tipo === 'Curso em vídeo' ? 'Aulas' : 'Sumário'}</button>
+      <button class="tab" role="tab" id="t3" aria-selected="false" aria-controls="p3" tabindex="-1">Avaliações${l.aval ? ' (' + l.aval + ')' : ''}</button>
+    </div>
+    <div class="tab-panel" id="p1" role="tabpanel" aria-labelledby="t1"><h2 style="font-size:1.5rem">${escHTML(l.autor)}</h2><p>${escHTML(l.bio || 'Autor independente na entre linhas.')}</p></div>
+    <div class="tab-panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden><ol class="toc">${(l.sumario || ['Introdução']).map(s => `<li><span>${escHTML(s)}</span></li>`).join('')}</ol></div>
+    <div class="tab-panel" id="p3" role="tabpanel" aria-labelledby="t3" hidden>
+      ${l.aval ? `<div class="bars" aria-label="Distribuição das notas">${[5, 4, 3, 2, 1].map((n, i) => `<div><span>${n}</span><i style="--w:${Math.max(0, pct[i])}%"></i><span>${Math.max(0, pct[i])}%</span></div>`).join('')}</div>` : ''}
+      ${notas.length ? notas.map(a => `<article class="review"><header><b>${escHTML(a.nome)}</b><span class="muted small">${escHTML(a.cidade)}</span>${L.stars(a.nota)}</header><p style="margin:0">${escHTML(a.texto)}</p></article>`).join('') : '<p class="muted">Ainda ninguém avaliou. Quem comprar pode deixar a primeira avaliação pela estante.</p>'}
+    </div>
+
+    <section class="related" aria-labelledby="h-rel">
+      <div class="split-head"><h2 id="h-rel">Quem levou este também levou</h2></div>
+      <div class="grid-4" id="rel"></div>
+    </section>`;
+
+  document.getElementById('rel').innerHTML = ER.todos().filter(x => x.id !== l.id).sort((a, b) => (b.cat === l.cat) - (a.cat === l.cat) || b.vendas - a.vendas).slice(0, 4).map(L.bookCard).join('');
+
+  // abas
+  const tabs = [...document.querySelectorAll('.tab')];
+  function sel(t) { tabs.forEach(x => { const on = x === t; x.setAttribute('aria-selected', on); x.tabIndex = on ? 0 : -1; document.getElementById(x.getAttribute('aria-controls')).hidden = !on; }); t.focus(); }
+  tabs.forEach((t, i) => { t.onclick = () => sel(t); t.onkeydown = e => { if (e.key === 'ArrowRight') sel(tabs[(i + 1) % 3]); if (e.key === 'ArrowLeft') sel(tabs[(i + 2) % 3]); }; });
+
+  // amostra
+  const back = document.getElementById('modal');
+  back.querySelector('.modal-x').innerHTML = icon('close', 22);
+  document.getElementById('m-titulo').textContent = 'Primeiras páginas de ' + l.titulo;
+  document.getElementById('m-texto').innerHTML = (l.trecho || []).map(p => `<p>${escHTML(p)}</p>`).join('');
+  document.getElementById('m-cta').innerHTML = `<a class="btn" href="checkout.html?id=${l.id}">Continuar lendo por ${ER.brl(l.preco)}</a><button class="btn-quiet" type="button" data-close>Voltar à página</button>`;
+  L.bindModal(back);
+  back.addEventListener('click', e => { if (e.target.closest('[data-close]')) L.closeModal(back); });
+  const am = document.getElementById('amostra'); if (am) am.onclick = () => L.openModal(back);
+  if (location.hash === '#garantia') document.getElementById('garantia').scrollIntoView();
+</script>
+</body>
+</html>
