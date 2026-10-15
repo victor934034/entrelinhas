@@ -1,0 +1,11 @@
+{
+  "baseUrl": "http://localhost:3000",
+  "smtp": {
+    "host": "smtp.gmail.com",
+    "port": 465,
+    "secure": true,
+    "user": "seuemail@gmail.com",
+    "pass": "senha-de-app-do-google",
+    "from": "entre linhas <seuemail@gmail.com>"
+  }
+}

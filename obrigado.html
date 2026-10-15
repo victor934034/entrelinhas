@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compra confirmada | entre linhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main class="wrap"><div class="thanks" id="raiz"><p class="muted">Carregando…</p></div></main>
+<div id="site-footer"></div>
+<script src="js/data.js"></script><script src="js/icons.js"></script><script src="js/covers.js"></script><script src="js/layout.js"></script>
+<script>
+  L.mount({ active: 'biblioteca' });
+  const raiz = document.getElementById('raiz');
+  (async function () {
+    const u = await ER.exigeLogin();
+    let o;
+    try { o = (await ER.api('GET', '/api/pedidos/' + encodeURIComponent(new URLSearchParams(location.search).get('pedido') || ''))).pedido; }
+    catch (e) { raiz.innerHTML = `<div class="empty"><h3>Pedido não encontrado</h3><p class="muted">${escHTML(e.message)}</p><a class="btn" href="biblioteca.html">Ir para minha estante</a></div>`; return; }
+    if (o.status === 'aguardando') { location.replace('checkout.html?id=' + o.pid); return; }
+    if (o.status !== 'pago' && o.status !== 'reembolso_pedido') { raiz.innerHTML = `<div class="empty"><h3>Este pedido não está ativo</h3><p class="muted">Situação: ${o.status === 'reembolsado' ? 'reembolsado' : 'cancelado'}.</p><a class="btn" href="catalogo.html">Voltar ao catálogo</a></div>`; return; }
+    document.title = 'Compra confirmada | entre linhas';
+    const nome = u.nome.split(' ')[0];
+    const arquivos = (o.arquivos || []).map(a => `
+      <div class="dl-row">${icon(a.ext === 'mp4' || a.ext === 'mp3' ? 'play' : 'epub')}
+        <div><b>${escHTML(a.nome)}</b><small>${a.ext.toUpperCase()}, ${escHTML(a.tam)}</small></div>
+        <a class="btn btn-ghost" href="${ER.urlArquivo(a.fid, true)}">${icon('download', 18)} Baixar</a>
+      </div>`).join('');
+    raiz.innerHTML = `
+    <div>
+      <span class="seal">${icon('check', 20)} Pagamento confirmado</span>
+      <h1>${escHTML(nome)}, seu livro já é seu.</h1>
+      <p class="lede">Os arquivos abaixo também ficam guardados na sua estante, sempre que você entrar na conta.</p>
+      <div class="dl-list">${arquivos}</div>
+      <div class="row-flex">
+        <a class="btn btn-lg" href="biblioteca.html">Abrir minha estante</a>
+        <a class="btn-quiet" href="catalogo.html">Continuar explorando o catálogo</a>
+      </div>
+      <hr class="hr">
+      <h2 style="font-size:1.375rem">Ajude o autor a ser encontrado</h2>
+      <p class="muted" style="max-width:52ch">Autores independentes vivem de indicação. Quando terminar a leitura, <a href="produto.html?id=${o.pid}">deixe uma avaliação de duas linhas</a> na página do livro. Faz mais diferença do que parece.</p>
+    </div>
+    <aside class="receipt" aria-label="Recibo">
+      ${coverSVG({ id: o.pid, titulo: o.titulo, autor: o.autor, capa: o.capa })}
+      <dl>
+        <div><dt>Pedido</dt><dd>${escHTML(o.id)}</dd></div>
+        <div><dt>${escHTML(o.titulo)}</dt><dd>${ER.brl(o.valor)}</dd></div>
+        <div><dt>Forma de pagamento</dt><dd>Pix</dd></div>
+        <div><dt>Confirmado em</dt><dd>${ER.dataHora(o.pagoEm)}</dd></div>
+        <div style="border-top:1.5px solid var(--ink);padding-top:10px;font-weight:600"><dt>Total</dt><dd class="serif" style="font-size:1.375rem">${ER.brl(o.valor)}</dd></div>
+      </dl>
+      <p class="xs muted" style="margin:16px 0 0">Prazo de reembolso: ${o.garantia} dias a partir da confirmação. Peça pela sua estante.</p>
+    </aside>`;
+  })();
+</script>
+</body>
+</html>

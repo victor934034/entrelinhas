@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entrar | entre linhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main class="auth">
+  <section class="auth-art on-navy" aria-label="Uma frase de leitora">
+    <blockquote>Todo livro começa com alguém que decidiu publicar e alguém que decidiu ler.
+      <cite>entre linhas</cite></blockquote>
+    <div class="auth-spines" aria-hidden="true" id="lombadas"></div>
+  </section>
+  <section class="auth-form">
+    <div class="tabs" role="tablist" aria-label="Entrar ou criar conta" style="margin-top:0">
+      <button class="tab" role="tab" id="ta1" aria-selected="true" aria-controls="pa1">Já tenho conta</button>
+      <button class="tab" role="tab" id="ta2" aria-selected="false" aria-controls="pa2" tabindex="-1">Criar conta</button>
+    </div>
+
+    <form id="pa1" role="tabpanel" aria-labelledby="ta1" novalidate>
+      <h1 style="font-size:2.2rem">Que bom te ver de novo.</h1>
+      <div class="field"><label for="e1">E-mail</label><input id="e1" type="email" autocomplete="email" inputmode="email"><span class="msg">Digite o e-mail que você usou na compra.</span></div>
+      <div class="field"><label for="s1">Senha</label><input id="s1" type="password" autocomplete="current-password"><span class="msg">Digite a sua senha.</span></div>
+      <p class="small"><a href="#" id="esqueci">Esqueci a senha</a></p>
+      <p class="form-erro" id="erro1" role="alert"></p>
+      <button class="btn btn-lg btn-block mt-1" type="submit" id="entrar">Entrar na minha estante</button>
+    </form>
+
+    <form id="pa3" hidden novalidate>
+      <h1 style="font-size:2.2rem">Vamos recuperar sua senha.</h1>
+      <p class="muted">Digite o e-mail da sua conta. Enviaremos um link para criar uma nova senha, válido por 1 hora.</p>
+      <div class="field"><label for="e3">E-mail</label><input id="e3" type="email" autocomplete="email" inputmode="email"><span class="msg">Digite o e-mail da sua conta.</span></div>
+      <p class="form-erro" id="erro3" role="alert"></p>
+      <p id="ok3" class="pix-wait" role="status" hidden></p>
+      <button class="btn btn-lg btn-block mt-1" type="submit" id="enviar3">Enviar link de recuperação</button>
+      <p class="small mt-1"><a href="#" id="voltar3">Voltar para o login</a></p>
+    </form>
+
+    <form id="pa2" role="tabpanel" aria-labelledby="ta2" hidden novalidate>
+      <h1 style="font-size:2.2rem">Comece do jeito que preferir.</h1>
+      <fieldset class="role" style="border:0;padding:0;margin:0 0 26px" aria-label="O que você quer fazer">
+        <label><input type="radio" name="papel" value="leitor" checked><b>Quero ler</b><span>Compre, baixe e organize sua estante.</span></label>
+        <label><input type="radio" name="papel" value="autor"><b>Quero vender</b><span>Publique livros, guias e cursos.</span></label>
+      </fieldset>
+      <div class="field"><label for="n2">Como devemos te chamar</label><input id="n2" autocomplete="name"><span class="msg">Escreva seu nome.</span></div>
+      <div class="field"><label for="e2">E-mail</label><input id="e2" type="email" autocomplete="email"><span class="msg">Esse e-mail parece incompleto. Confira o @ e o final, como .com.br.</span></div>
+      <div class="field"><label for="s2">Senha <span class="hint">pelo menos 8 caracteres</span></label><input id="s2" type="password" autocomplete="new-password"><span class="msg">A senha precisa ter 8 caracteres ou mais.</span></div>
+      <p class="form-erro" id="erro2" role="alert"></p>
+      <button class="btn btn-lg btn-block mt-1" type="submit" id="criar">Criar conta</button>
+      <p class="xs muted mt-1">Autores não pagam mensalidade e recebem direto na própria chave Pix.</p>
+    </form>
+  </section>
+</main>
+<script src="js/data.js"></script><script src="js/icons.js"></script><script src="js/covers.js"></script><script src="js/layout.js"></script>
+<script>
+  const proximo = ER.destinoSeguro(new URLSearchParams(location.search).get('next'), null);
+  L.mount({ active: '' }).then(u => { if (u) location.replace(proximo || 'biblioteca.html'); });
+  const cores = ['#0E2635', '#B5652E', '#3F6B4A', '#D9A441', '#7A2E25', '#5E7F94', '#EFE6D2', '#5B5347', '#B5652E', '#0E2635'];
+  document.getElementById('lombadas').innerHTML = cores.map((c, i) => `<i style="width:${22 + (i * 7) % 18}px;height:${70 + (i * 37) % 80}px;background:${c}"></i>`).join('');
+
+  const tabs = [document.getElementById('ta1'), document.getElementById('ta2')], pans = [document.getElementById('pa1'), document.getElementById('pa2')];
+  function sel(i) { tabs.forEach((t, j) => { t.setAttribute('aria-selected', i === j); t.tabIndex = i === j ? 0 : -1; pans[j].hidden = i !== j; }); }
+  tabs.forEach((t, i) => { t.onclick = () => sel(i); t.onkeydown = e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { sel(1 - i); tabs[1 - i].focus(); } }; });
+  if (location.hash === '#criar') sel(1);
+
+  const $ = id => document.getElementById(id);
+  const mark = (el, ok) => { el.closest('.field').classList.toggle('invalid', !ok); el.setAttribute('aria-invalid', !ok); return ok; };
+  const okMail = v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+  document.querySelectorAll('input').forEach(i => i.addEventListener('input', () => i.closest('.field') && i.closest('.field').classList.remove('invalid')));
+
+  pans[0].onsubmit = async e => {
+    e.preventDefault(); $('erro1').textContent = '';
+    const a = mark($('e1'), okMail($('e1').value)), b = mark($('s1'), $('s1').value.length > 0);
+    if (!(a && b)) return (document.querySelector('#pa1 .field.invalid input') || {}).focus();
+    $('entrar').disabled = true;
+    try { await ER.api('POST', '/api/entrar', { email: $('e1').value, senha: $('s1').value }); location.href = proximo || 'biblioteca.html'; }
+    catch (err) { $('erro1').textContent = err.message; $('entrar').disabled = false; }
+  };
+  pans[1].onsubmit = async e => {
+    e.preventDefault(); $('erro2').textContent = '';
+    const a = mark($('n2'), $('n2').value.trim().length > 1), b = mark($('e2'), okMail($('e2').value)), c = mark($('s2'), $('s2').value.length >= 8);
+    if (!(a && b && c)) return (document.querySelector('#pa2 .field.invalid input') || {}).focus();
+    const autor = document.querySelector('[name=papel]:checked').value === 'autor';
+    $('criar').disabled = true;
+    try { await ER.api('POST', '/api/cadastro', { nome: $('n2').value, email: $('e2').value, senha: $('s2').value }); location.href = proximo || (autor ? 'conta.html?novo=1' : 'biblioteca.html'); }
+    catch (err) { $('erro2').textContent = err.message; $('criar').disabled = false; }
+  };
+
+  $('esqueci').onclick = ev => { ev.preventDefault(); document.querySelector('.tabs').style.display = 'none'; pans.forEach(p => p.hidden = true); $('pa3').hidden = false; $('e3').value = $('e1').value; $('e3').focus(); };
+  $('voltar3').onclick = ev => { ev.preventDefault(); document.querySelector('.tabs').style.display = ''; $('pa3').hidden = true; sel(0); };
+  $('pa3').onsubmit = async ev => {
+    ev.preventDefault(); $('erro3').textContent = ''; $('ok3').hidden = true;
+    if (!mark($('e3'), okMail($('e3').value))) return $('e3').focus();
+    $('enviar3').disabled = true;
+    try {
+      const r = await ER.api('POST', '/api/esqueci', { email: $('e3').value });
+      $('ok3').hidden = false;
+      $('ok3').textContent = r.emailConfigurado ? 'Se esse e-mail tiver uma conta, o link já está a caminho. Olhe também o spam.' : 'O envio de e-mail ainda não foi configurado neste servidor. O link foi gerado e aparece no terminal onde o servidor roda; o administrador pode copiá-lo para você (ou use reset-senha.js).';
+    } catch (err) { $('erro3').textContent = err.message; }
+    $('enviar3').disabled = false;
+  };
+</script>
+</body>
+</html>

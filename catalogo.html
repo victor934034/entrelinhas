@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Explorar o catálogo | entre linhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main>
+  <div class="wrap page-head">
+    <nav class="crumbs" aria-label="Você está em"><a href="index.html">Início</a><span aria-hidden="true">/</span><span id="crumb">Catálogo</span></nav>
+    <h1 id="titulo">Catálogo</h1>
+    <p class="lede" id="sub" style="margin:0"></p>
+  </div>
+
+  <div class="wrap shop">
+    <div>
+      <button class="btn btn-ghost filters-toggle" id="ft" aria-expanded="false">Filtros</button>
+      <form class="filters closed" id="filtros" aria-label="Filtros do catálogo">
+        <fieldset><legend>Assunto</legend><div id="f-cat"></div></fieldset>
+        <fieldset><legend>Preço</legend>
+          <label class="check"><input type="radio" name="preco" value="" checked><span>Qualquer preço</span></label>
+          <label class="check"><input type="radio" name="preco" value="0-20"><span>Até R$ 20</span></label>
+          <label class="check"><input type="radio" name="preco" value="20-50"><span>R$ 20 a R$ 50</span></label>
+          <label class="check"><input type="radio" name="preco" value="50-999"><span>Acima de R$ 50</span></label>
+        </fieldset>
+        <fieldset><legend>Formato</legend><div id="f-fmt"></div></fieldset>
+        <button type="button" class="btn-quiet small" id="limpar">Limpar filtros</button>
+      </form>
+    </div>
+
+    <section aria-live="polite">
+      <div class="toolbar">
+        <p class="muted" id="contagem" style="margin:0"></p>
+        <div class="row-flex"><label for="ordem" class="small muted">Ordenar por</label>
+          <select id="ordem" style="width:auto"><option value="relevancia">Mais vendidos</option><option value="novos">Chegaram agora</option><option value="menor">Menor preço</option><option value="maior">Maior preço</option><option value="nota">Melhor avaliados</option></select></div>
+      </div>
+      <div class="grid-3" id="lista"></div>
+    </section>
+  </div>
+</main>
+<div id="site-footer"></div>
+
+<script src="js/data.js"></script><script src="js/icons.js"></script><script src="js/covers.js"></script><script src="js/layout.js"></script>
+<script>
+  L.mount({ active: 'explorar' });
+  const qs = new URLSearchParams(location.search);
+  const state = { cats: new Set(qs.get('cat') ? [qs.get('cat')] : []), fmts: new Set(), preco: '', q: (qs.get('q') || '').trim(), ordem: 'relevancia' };
+  let todos = [];
+  const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+  function montaFiltros() {
+    const fmtCount = {}; todos.forEach(l => l.formatos.forEach(f => fmtCount[f[0]] = (fmtCount[f[0]] || 0) + 1));
+    document.getElementById('f-cat').innerHTML = ER.CATEGORIAS.map(c => `<label class="check"><input type="checkbox" name="cat" value="${c.id}"${state.cats.has(c.id) ? ' checked' : ''}><span>${c.nome}</span><small>${todos.filter(l => l.cat === c.id).length}</small></label>`).join('');
+    document.getElementById('f-fmt').innerHTML = Object.keys(fmtCount).sort().map(f => `<label class="check"><input type="checkbox" name="fmt" value="${f}"><span>${f}</span><small>${fmtCount[f]}</small></label>`).join('') || '<p class="small muted" style="margin:0">Nenhum formato ainda.</p>';
+  }
+  if (state.q) document.getElementById('q-global').value = state.q;
+
+  function render() {
+    let r = todos.filter(l => {
+      if (state.cats.size && !state.cats.has(l.cat)) return false;
+      if (state.fmts.size && !l.formatos.some(f => state.fmts.has(f[0]))) return false;
+      if (state.preco) { const [a, b] = state.preco.split('-').map(Number); if (l.preco < a || l.preco >= b) return false; }
+      if (state.q && !norm([l.titulo, l.autor, l.sub || '', l.tipo || '', ER.catNome(l.cat)].join(' ')).includes(norm(state.q))) return false;
+      return true;
+    });
+    const ord = { relevancia: (a, b) => b.vendas - a.vendas || b.criado - a.criado, novos: (a, b) => b.criado - a.criado, menor: (a, b) => a.preco - b.preco, maior: (a, b) => b.preco - a.preco, nota: (a, b) => b.nota - a.nota || b.aval - a.aval };
+    r.sort(ord[state.ordem]);
+    document.getElementById('contagem').textContent = r.length === 1 ? '1 título encontrado' : r.length + ' títulos encontrados';
+    const cat = state.cats.size === 1 ? ER.catNome([...state.cats][0]) : '';
+    document.getElementById('titulo').textContent = state.q ? `Resultados para “${state.q}”` : (cat || 'Todo o catálogo');
+    document.getElementById('crumb').textContent = cat || (state.q ? 'Busca' : 'Catálogo');
+    document.getElementById('sub').textContent = cat || state.q ? '' : 'Livros, guias, planilhas e cursos de quem publica por conta própria.';
+    document.title = document.getElementById('titulo').textContent + ' | entre linhas';
+    const vazioTotal = !todos.length;
+    document.getElementById('lista').innerHTML = r.length ? r.map(L.bookCard).join('') :
+      `<div class="empty" style="grid-column:1/-1"><h3>${vazioTotal ? 'O catálogo ainda está vazio' : 'Nada por aqui com esses filtros'}</h3><p class="muted">${vazioTotal ? 'Os títulos aparecem aqui assim que alguém publicar.' : 'Tente tirar o filtro de preço ou de formato. Se você procurava um autor, confira a grafia do nome.'}</p>${vazioTotal ? '<a class="btn" href="novo-produto.html">Publicar um produto</a>' : '<button class="btn" id="vazio-limpar">Limpar filtros e ver tudo</button>'}</div>`;
+    const v = document.getElementById('vazio-limpar'); if (v) v.onclick = limpar;
+  }
+  function limpar() {
+    state.cats.clear(); state.fmts.clear(); state.preco = ''; state.q = ''; document.getElementById('q-global').value = '';
+    document.querySelectorAll('#filtros input[type=checkbox]').forEach(i => i.checked = false);
+    document.querySelector('#filtros input[name=preco][value=""]').checked = true; history.replaceState(null, '', 'catalogo.html'); render();
+  }
+  document.getElementById('filtros').addEventListener('change', e => {
+    const t = e.target;
+    if (t.name === 'cat') t.checked ? state.cats.add(t.value) : state.cats.delete(t.value);
+    if (t.name === 'fmt') t.checked ? state.fmts.add(t.value) : state.fmts.delete(t.value);
+    if (t.name === 'preco') state.preco = t.value;
+    render();
+  });
+  document.getElementById('ordem').onchange = e => { state.ordem = e.target.value; render(); };
+  document.getElementById('limpar').onclick = limpar;
+  const ft = document.getElementById('ft'), fl = document.getElementById('filtros');
+  ft.onclick = () => { const c = fl.classList.toggle('closed'); ft.setAttribute('aria-expanded', !c); };
+  if (matchMedia('(min-width:861px)').matches) fl.classList.remove('closed');
+  addEventListener('resize', () => { if (matchMedia('(min-width:861px)').matches) fl.classList.remove('closed'); });
+
+  ER.api('GET', '/api/produtos').then(j => { todos = j.produtos; montaFiltros(); render(); })
+    .catch(e => { document.getElementById('lista').innerHTML = `<div class="empty" style="grid-column:1/-1"><h3>Não foi possível carregar o catálogo</h3><p class="muted">${escHTML(e.message)}</p></div>`; });
+</script>
+</body>
+</html>

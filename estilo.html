@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guia de estilo | entre linhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main class="wrap">
+  <div class="page-head"><h1>Guia de estilo</h1><p class="lede" style="margin:0">As regras visuais da entre linhas, na ordem em que aparecem nas telas. Serve de referência para quem for continuar o protótipo.</p></div>
+
+  <section class="sg-block"><h2>Cores</h2>
+    <div class="swatches" id="cores"></div>
+    <p class="muted small mt-1">O âmbar aparece em preços, avaliações e selos, nunca em áreas grandes. Texto pequeno em âmbar usa a versão escura (#96501F) para manter contraste de 4,5:1 sobre o papel.</p>
+  </section>
+
+  <section class="sg-block"><h2>Tipografia</h2>
+    <div class="type-spec"><small>Fraunces 600<br>títulos, preços, capas</small><div><span class="serif" style="font-size:3.4rem;line-height:1.05;font-weight:600;letter-spacing:-.028em">Leia o que ninguém te indicou ainda.</span></div></div>
+    <div class="type-spec"><small>Fraunces 600, 2,4 rem</small><div><h2 style="margin:0">Chegaram esta semana</h2></div></div>
+    <div class="type-spec"><small>Fraunces itálico, marca e citações</small><div><span class="serif" style="font-style:italic;font-size:1.5rem;font-variation-settings:'SOFT' 100,'WONK' 1">Dona Nazaré acendia o forno às quatro e vinte.</span></div></div>
+    <div class="type-spec"><small>IBM Plex Sans 400, 16/26<br>texto corrido e interface</small><div><p style="margin:0;max-width:60ch">Uma padeira que conta os minutos até o forno esfriar. Um vigia noturno que aprende libras com a filha. São onze histórias curtas, pensadas para caber numa viagem de metrô.</p></div></div>
+    <div class="type-spec"><small>IBM Plex Sans 600, 15 px<br>botões e rótulos</small><div><b>Comprar agora</b> &nbsp; <b class="small">Continuar lendo</b></div></div>
+    <p class="muted small mt-1">Escala: 13, 14, 16, 18, 22, 28, 38 e 64 px. Rótulos ficam em caixa normal, sem versalete nem espaçamento largo.</p>
+  </section>
+
+  <section class="sg-block"><h2>Botões e marcas</h2>
+    <div class="row-flex"><a class="btn btn-lg" href="#">Comprar agora</a><a class="btn btn-ghost" href="#">Ler as primeiras páginas</a><a class="btn btn-amber" href="#">Destaque raro</a><a class="btn-quiet" href="#">Ação discreta</a><span class="tag">Culinária</span><span class="tag tag-navy">Livro da semana</span><span class="tag tag-ok">Aprovada</span><span class="tag tag-warn">Aguardando boleto</span><span class="tag tag-err">Reembolso pedido</span></div>
+    <div class="row-flex mt-2" style="background:var(--navy);padding:20px" ><a class="btn btn-paper" href="#">Entrar</a><span class="on-navy"><a class="btn-quiet" href="#">Sobre fundo azul</a></span></div>
+  </section>
+
+  <section class="sg-block"><h2>Formas</h2>
+    <p class="muted">Cantos variam de propósito. Capas e inputs ficam quase retos, cartões de compra ganham um canto grande na diagonal, modais são os mais arredondados.</p>
+    <div class="radius-demo"><div style="border-radius:0">0, cartões de dados</div><div style="border-radius:2px">2, botões e campos</div><div style="border-radius:5px 0 5px 0">5 e 0, bônus</div><div style="border-radius:0 12px 0 0">0 e 12, caixa de compra</div><div style="border-radius:12px;box-shadow:0 24px 60px rgba(14,38,53,.25)">12, modal com sombra</div></div>
+    <p class="muted small mt-1">Sombra só em três lugares: modais, destaque do livro da semana e caixa de compra. Todo o resto usa linha de 1 px na cor de borda.</p>
+  </section>
+
+  <section class="sg-block"><h2>Ícones</h2>
+    <div class="icon-grid" id="icones"></div>
+    <p class="muted small mt-1">Traço de 1,7 px, pontas retas e cantos vivos, como uma dobra de papel. Tamanhos seguem a hierarquia: 18 px em botões, 22 px em listas, 28 px em destaques.</p>
+  </section>
+
+  <section class="sg-block"><h2>Capas geradas</h2>
+    <p class="muted" style="max-width:60ch">Cada capa é um SVG com motivo próprio (sol, grade, cidade, rio, janela, barras e outros), lombada marcada à esquerda e título alinhado à esquerda. Nada de imagem de banco.</p>
+    <div class="grid-4" id="capas" style="grid-template-columns:repeat(6,minmax(0,1fr))"></div>
+  </section>
+
+  <section class="sg-block" style="border:0"><h2>Campos</h2>
+    <div style="max-width:420px">
+      <div class="field"><label for="x1">Nome completo</label><input id="x1" value="Nome Sobrenome"></div>
+      <div class="field invalid"><label for="x2">E-mail</label><input id="x2" value="nome@email"><span class="msg">Esse e-mail parece incompleto. Confira se tem @ e o final, como .com.br.</span></div>
+      <label class="check"><input type="checkbox" checked><span>Quero receber avisos de novos livros do autor</span></label>
+    </div>
+  </section>
+</main>
+<div id="site-footer"></div>
+<script src="js/data.js"></script><script src="js/icons.js"></script><script src="js/covers.js"></script><script src="js/layout.js"></script>
+<script>
+  const COVER_MOTIFS_ALL = ['sol', 'linhas', 'arco', 'grade', 'traco', 'prato', 'cidade', 'codigo', 'pilha', 'casa', 'janela', 'checklist'];
+  L.mount({ active: '' });
+  const cores = [['Navy (principal)', '#14344B'], ['Navy escuro', '#0E2635'], ['Bege papel (fundo)', '#FAF5EC'], ['Âmbar queimado (accent)', '#B5652E'], ['Quase-preto (texto)', '#221D17'], ['Texto secundário', '#5B5347'], ['Borda', '#E4DAC5'], ['Sucesso', '#3F6B4A'], ['Erro', '#A23B2E'], ['Tag / pill', '#EFE6D2']];
+  document.getElementById('cores').innerHTML = cores.map(([n, h]) => `<div class="swatch"><i style="background:${h}"></i><b>${n}</b><code>${h}</code></div>`).join('');
+  const nomes = { bookmark: 'marcador', epub: 'arquivo', pix: 'Pix', shield: 'garantia', download: 'baixar', spine: 'lombada', pen: 'autor', quote: 'trecho', wallet: 'saque', star: 'nota' };
+  document.getElementById('icones').innerHTML = Object.entries(nomes).map(([k, v], i) => `<figure>${icon(k, [22, 28, 22, 34, 22, 28, 22, 22, 28, 22][i])}<span>${v}</span></figure>`).join('');
+  document.getElementById('capas').innerHTML = COVER_MOTIFS_ALL.map((m, i) => `<div>${coverSVG({ id: 'estilo-' + m, titulo: 'Título da capa', autor: 'Autor', capa: Object.assign({ motif: m }, COVER_PALETTES[i % COVER_PALETTES.length]) })}</div>`).join('');
+</script>
+</body>
+</html>

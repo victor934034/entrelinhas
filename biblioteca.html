@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minha estante | entre linhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main class="wrap">
+  <div class="page-head" style="border:0;padding-bottom:0">
+    <div class="lib-head">
+      <div><h1 id="ola">Minha estante</h1><p class="lede" style="margin:0" id="resumo"></p></div>
+      <a class="btn btn-ghost" href="catalogo.html">Achar o próximo livro</a>
+    </div>
+  </div>
+  <div class="lib-grid">
+    <div>
+      <div class="split-head"><h2 style="font-size:1.5rem">Seus arquivos</h2></div>
+      <div class="shelf-row" id="prateleira"></div>
+    </div>
+    <aside class="marks" aria-labelledby="h-pend">
+      <h2 id="h-pend" style="font-size:1.375rem">Aguardando pagamento</h2>
+      <div id="pendentes"></div>
+      <p class="small muted">Pagou e o arquivo ainda não apareceu? O autor precisa confirmar o recebimento. Esta página mostra o resultado assim que ele fizer isso.</p>
+    </aside>
+  </div>
+</main>
+
+<div class="modal-back" id="modal-reemb" role="dialog" aria-modal="true" aria-labelledby="mr-t">
+  <div class="modal" style="max-width:480px">
+    <button class="modal-x" aria-label="Fechar"></button>
+    <h3 id="mr-t">Pedir reembolso</h3>
+    <p class="muted" id="mr-sub"></p>
+    <div class="field"><label for="mr-motivo">Conte o que aconteceu <span class="hint">opcional</span></label><textarea id="mr-motivo" maxlength="400"></textarea></div>
+    <p class="form-erro" id="mr-erro" role="alert"></p>
+    <div class="row-flex mt-1"><button class="btn" id="mr-ok" type="button">Enviar pedido</button><button class="btn-quiet" data-close type="button">Voltar</button></div>
+  </div>
+</div>
+<div id="site-footer"></div>
+<script src="js/data.js"></script><script src="js/icons.js"></script><script src="js/covers.js"></script><script src="js/layout.js"></script>
+<script>
+  L.mount({ active: 'biblioteca' });
+  const $ = id => document.getElementById(id);
+  let pedidos = [], alvo = null;
+  const mdl = $('modal-reemb');
+  mdl.querySelector('.modal-x').innerHTML = icon('close', 22);
+  L.bindModal(mdl);
+  mdl.addEventListener('click', e => { if (e.target.closest('[data-close]')) L.closeModal(mdl); });
+
+  const dentroDoPrazo = o => o.status === 'pago' && Date.now() <= o.pagoEm + o.garantia * 86400000;
+  const abrivel = o => (o.arquivos || []).find(a => ['pdf', 'mp4', 'mp3'].includes(a.ext));
+
+  function desenha() {
+    const meus = pedidos.filter(o => o.status !== 'aguardando');
+    const pend = pedidos.filter(o => o.status === 'aguardando');
+    const ativos = meus.filter(o => o.status === 'pago' || o.status === 'reembolso_pedido');
+    $('resumo').textContent = ativos.length ? `${ativos.length} ${ativos.length === 1 ? 'título' : 'títulos'} na estante.` : 'Sua estante ainda está vazia.';
+
+    $('prateleira').innerHTML = meus.length ? meus.map(o => {
+      const livre = o.status === 'pago' || o.status === 'reembolso_pedido';
+      const ab = abrivel(o);
+      return `<div class="owned">
+        <div class="shelf"><a href="produto.html?id=${o.pid}">${coverSVG({ id: o.pid, titulo: o.titulo, autor: o.autor, capa: o.capa })}</a></div>
+        <h3>${escHTML(o.titulo)}</h3>
+        <span class="xs muted">${o.status === 'reembolso_pedido' ? 'Reembolso pedido, aguardando o autor' : o.status === 'reembolsado' ? 'Reembolsado' : 'Comprado em ' + ER.dataBR(o.pagoEm)}</span>
+        ${livre ? `<div class="acts">
+          ${ab ? `<a class="btn-quiet" href="${ER.urlArquivo(ab.fid)}" target="_blank" rel="noopener">Abrir</a>` : ''}
+          ${(o.arquivos || []).map(a => `<a class="btn-quiet" href="${ER.urlArquivo(a.fid, true)}" download>${a.ext.toUpperCase()}</a>`).join('')}
+        </div>
+        <div class="acts">
+          <a class="btn-quiet" href="produto.html?id=${o.pid}">${o.reviewed ? 'Ver minha avaliação' : 'Avaliar'}</a>
+          ${dentroDoPrazo(o) ? `<button class="btn-quiet" data-reemb="${o.id}">Pedir reembolso</button>` : ''}
+        </div>` : '<div class="acts"><a class="btn-quiet" href="produto.html?id=' + o.pid + '">Ver página</a></div>'}
+      </div>`;
+    }).join('') : '<div class="empty" style="grid-column:1/-1"><h3>Nada por aqui ainda</h3><p class="muted">Os livros que você comprar aparecem nesta estante, prontos para baixar.</p><a class="btn" href="catalogo.html">Explorar o catálogo</a></div>';
+
+    $('pendentes').innerHTML = pend.length ? pend.map(o => `
+      <blockquote style="border-left-color:var(--amber)"><p><b>${escHTML(o.titulo)}</b><br>${ER.brl(o.valor)}${o.avisoPago ? ', você avisou que pagou' : ', Pix ainda não pago'}</p>
+      <footer><a href="checkout.html?id=${o.pid}">${o.avisoPago ? 'Ver status' : 'Continuar o pagamento'}</a> · <button class="btn-quiet" data-cancelar="${o.id}" type="button">Cancelar</button></footer></blockquote>`).join('') : '<p class="muted small">Nenhum pedido esperando pagamento.</p>';
+  }
+
+  async function carrega() {
+    try { pedidos = (await ER.api('GET', '/api/estante')).pedidos; desenha(); }
+    catch (e) { $('prateleira').innerHTML = `<div class="empty" style="grid-column:1/-1"><h3>Não foi possível carregar</h3><p class="muted">${escHTML(e.message)}</p></div>`; }
+  }
+
+  document.addEventListener('click', async e => {
+    const r = e.target.closest('[data-reemb]'), c = e.target.closest('[data-cancelar]');
+    if (r) {
+      alvo = pedidos.find(o => o.id === r.dataset.reemb);
+      $('mr-sub').textContent = `${alvo.titulo}, ${ER.brl(alvo.valor)}. O autor recebe o pedido e devolve o valor por Pix.`;
+      $('mr-motivo').value = ''; $('mr-erro').textContent = ''; L.openModal(mdl);
+    }
+    if (c) {
+      try { await ER.api('POST', '/api/pedidos/' + c.dataset.cancelar + '/cancelar'); L.toast('Pedido cancelado'); carrega(); }
+      catch (err) { L.toast(err.message); }
+    }
+  });
+  $('mr-ok').onclick = async () => {
+    try { await ER.api('POST', '/api/pedidos/' + alvo.id + '/reembolso', { motivo: $('mr-motivo').value }); L.closeModal(mdl); L.toast('Pedido de reembolso enviado ao autor'); carrega(); }
+    catch (err) { $('mr-erro').textContent = err.message; }
+  };
+
+  ER.exigeLogin().then(u => { $('ola').textContent = 'Olá, ' + u.nome.split(' ')[0] + '.'; carrega(); setInterval(() => { if (pedidos.some(o => o.status === 'aguardando' || o.status === 'reembolso_pedido')) carrega(); }, 8000); });
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "entre-linhas",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Loja de livros e produtos digitais de autores independentes",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "nodemailer": "^10.1.1"
+  }
+}

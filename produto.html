@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Produto | entre linhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main class="wrap" id="produto"><p class="muted" style="padding:48px 0">Carregando…</p></main>
+
+<div class="modal-back" id="modal" role="dialog" aria-modal="true" aria-labelledby="m-titulo">
+  <div class="modal">
+    <button class="modal-x" aria-label="Fechar amostra"></button>
+    <h3 id="m-titulo">Amostra gratuita</h3>
+    <div class="fade-end"><div class="excerpt" id="m-texto"></div></div>
+    <div class="row-flex mt-2" id="m-cta"></div>
+  </div>
+</div>
+
+<div id="site-footer"></div>
+<script src="js/data.js"></script><script src="js/icons.js"></script><script src="js/covers.js"></script><script src="js/layout.js"></script>
+<script>
+  L.mount({ active: 'explorar' });
+  const id = new URLSearchParams(location.search).get('id');
+  const raiz = document.getElementById('produto');
+  const fmtIcon = f => f === 'MP4' || f === 'MP3' ? 'play' : (f === 'EPUB' || f === 'PDF') ? 'epub' : 'file';
+
+  function erro(titulo, msg) {
+    document.title = titulo + ' | entre linhas';
+    raiz.innerHTML = `<div class="empty" style="margin:64px 0"><h3>${escHTML(titulo)}</h3><p class="muted">${escHTML(msg)}</p><a class="btn" href="catalogo.html">Ver o catálogo</a></div>`;
+  }
+
+  async function carrega() {
+    let l;
+    try { l = (await ER.api('GET', '/api/produtos/' + encodeURIComponent(id || ''))).produto; }
+    catch (e) { return erro(e.status === 404 ? 'Produto não encontrado' : 'Não foi possível carregar', e.status === 404 ? 'Esse link pode ter mudado ou o autor tirou o produto do ar.' : e.message); }
+    desenha(l);
+  }
+
+  function desenha(l) {
+    document.title = l.titulo + ', ' + l.autor + ' | entre linhas';
+    const tipo = l.tipo;
+    const total = l.aval, dist = l.dist.map(n => total ? Math.round(n / total * 100) : 0);
+    const temSumario = l.sumario.length > 0;
+    const tabsDef = [['Sobre o autor', 'p1']].concat(temSumario ? [[tipo === 'Curso em vídeo' ? 'Aulas' : 'Sumário', 'p2']] : []).concat([['Avaliações' + (total ? ' (' + total + ')' : ''), 'p3']]);
+
+    let compra;
+    if (l.meu) compra = `<p class="muted small" style="margin:0 0 12px">${l.status === 'publicado' ? 'Este produto é seu e está à venda.' : 'Este produto é seu e está despublicado: só você o vê.'}</p><a class="btn btn-lg btn-block" href="novo-produto.html?id=${l.id}">Editar produto</a>`;
+    else if (l.possui) compra = `<p style="margin:0 0 12px"><b>Você já tem este título.</b></p><a class="btn btn-lg btn-block" href="biblioteca.html">Abrir na minha estante</a>`;
+    else compra = `<a class="btn btn-lg btn-block" href="checkout.html?id=${l.id}">Comprar agora</a>`;
+
+    raiz.innerHTML = `
+    <nav class="crumbs" style="padding-top:24px" aria-label="Você está em"><a href="index.html">Início</a><span aria-hidden="true">/</span><a href="catalogo.html?cat=${l.cat}">${ER.catNome(l.cat)}</a><span aria-hidden="true">/</span><span>${escHTML(l.titulo)}</span></nav>
+    <div class="product">
+      <div class="product-cover">${l.novo ? '<span class="corner">Novo</span>' : ''}${coverSVG(l)}</div>
+      <div class="product-info">
+        <span class="tag">${escHTML(tipo)}</span>
+        <h1 style="margin-top:12px">${escHTML(l.titulo)}</h1>
+        <p class="sub">${escHTML(l.sub || '')}</p>
+        <p style="margin:0">de <strong>${escHTML(l.autor)}</strong></p>
+        <ul class="meta">
+          ${total ? `<li><b>${ER.num1(l.nota)} de 5</b><span>${total} ${total === 1 ? 'avaliação' : 'avaliações'}</span></li>` : '<li><b>Novo</b><span>ainda sem avaliações</span></li>'}
+          <li><b>${l.formatos.map(f => f[0]).join(' e ')}</b><span>${l.formatos.length === 1 ? 'formato' : 'formatos'}</span></li>
+          ${l.vendas ? `<li><b>${l.vendas}</b><span>${l.vendas === 1 ? 'leitor' : 'leitores'}</span></li>` : ''}
+        </ul>
+        ${l.desc.map(p => `<p>${escHTML(p)}</p>`).join('')}
+        <h2 style="font-size:1.25rem;margin-top:32px">O que vem no arquivo</h2>
+        <ul class="files">${l.formatos.map(f => `<li>${icon(fmtIcon(f[0]))}<span><b>${f[0]}</b></span><small>${escHTML(f[1])}</small></li>`).join('')}</ul>
+      </div>
+      <aside class="buybox-col"><div class="buybox">
+        <div><span class="price price-big">${ER.brl(l.preco)}</span></div>
+        <p class="installments">Pagamento por Pix, direto ao autor.</p>
+        ${compra}
+        ${l.trecho.length ? '<button class="btn btn-ghost btn-block" id="amostra">Ler as primeiras páginas</button>' : ''}
+        <ul class="assure" id="garantia">
+          <li>${icon('pix')}<span>Pix com QR Code ou copia e cola. O arquivo é liberado quando o autor confirmar o pagamento.</span></li>
+          <li>${icon('shield')}<span><b>Garantia de ${l.garantia} dias.</b> Não gostou, peça o reembolso pela sua estante dentro do prazo.</span></li>
+          <li>${icon('lock')}<span>O arquivo só abre na sua conta. Não pedimos dados de cartão.</span></li>
+        </ul>
+      </div></aside>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Detalhes do produto">
+      ${tabsDef.map(([t, p], i) => `<button class="tab" role="tab" id="t-${p}" aria-selected="${i === 0}" aria-controls="${p}"${i ? ' tabindex="-1"' : ''}>${escHTML(t)}</button>`).join('')}
+    </div>
+    <div class="tab-panel" id="p1" role="tabpanel" aria-labelledby="t-p1"><h2 style="font-size:1.5rem">${escHTML(l.autor)}</h2><p>${escHTML(l.bio || 'Autor independente na entre linhas.')}</p></div>
+    ${temSumario ? `<div class="tab-panel" id="p2" role="tabpanel" aria-labelledby="t-p2" hidden><ol class="toc">${l.sumario.map(s => `<li><span>${escHTML(s)}</span></li>`).join('')}</ol></div>` : ''}
+    <div class="tab-panel" id="p3" role="tabpanel" aria-labelledby="t-p3" hidden>
+      ${total ? `<div class="bars" aria-label="Distribuição das notas">${[5, 4, 3, 2, 1].map((n, i) => `<div><span>${n}</span><i style="--w:${dist[i]}%"></i><span>${dist[i]}%</span></div>`).join('')}</div>` : ''}
+      ${l.possui ? `<form id="form-aval" class="mt-1" novalidate style="margin-bottom:24px"><h3 style="font-size:1.125rem">${l.minhaAvaliacao ? 'Sua avaliação' : 'Deixe sua avaliação'}</h3>
+        <fieldset class="rate-pick" aria-label="Nota de 1 a 5">${[1, 2, 3, 4, 5].map(n => `<label><input type="radio" name="nota" value="${n}"${l.minhaAvaliacao && l.minhaAvaliacao.nota === n ? ' checked' : ''}><span>${n}</span></label>`).join('')}</fieldset>
+        <div class="field"><label for="av-texto">O que você achou?</label><textarea id="av-texto" maxlength="600">${escHTML(l.minhaAvaliacao ? l.minhaAvaliacao.texto : '')}</textarea></div>
+        <p class="form-erro" id="av-erro" role="alert"></p>
+        <button class="btn" type="submit">${l.minhaAvaliacao ? 'Atualizar avaliação' : 'Publicar avaliação'}</button></form>` : ''}
+      ${l.avaliacoes.length ? l.avaliacoes.map(a => `<article class="review"><header><b>${escHTML(a.nome)}</b>${a.cidade ? `<span class="muted small">${escHTML(a.cidade)}</span>` : ''}${L.stars(a.nota)}</header><p style="margin:0">${escHTML(a.texto)}</p></article>`).join('') : '<p class="muted">Ainda ninguém avaliou. Quem comprar pode deixar a primeira avaliação aqui.</p>'}
+    </div>
+
+    <section class="related" aria-labelledby="h-rel" id="sec-rel" hidden>
+      <div class="split-head"><h2 id="h-rel">Quem levou este também levou</h2></div>
+      <div class="grid-4" id="rel"></div>
+    </section>`;
+
+    ER.api('GET', '/api/produtos').then(j => {
+      const outros = j.produtos.filter(x => x.id !== l.id).sort((a, b) => (b.cat === l.cat) - (a.cat === l.cat) || b.vendas - a.vendas).slice(0, 4);
+      if (!outros.length) return;
+      document.getElementById('sec-rel').hidden = false;
+      document.getElementById('rel').innerHTML = outros.map(L.bookCard).join('');
+    }).catch(() => {});
+
+    // abas
+    const tabs = [...document.querySelectorAll('.tab')];
+    function sel(t) { tabs.forEach(x => { const on = x === t; x.setAttribute('aria-selected', on); x.tabIndex = on ? 0 : -1; document.getElementById(x.getAttribute('aria-controls')).hidden = !on; }); t.focus(); }
+    tabs.forEach((t, i) => { t.onclick = () => sel(t); t.onkeydown = e => { if (e.key === 'ArrowRight') sel(tabs[(i + 1) % tabs.length]); if (e.key === 'ArrowLeft') sel(tabs[(i + tabs.length - 1) % tabs.length]); }; });
+
+    // amostra
+    if (l.trecho.length) {
+      const back = document.getElementById('modal');
+      back.querySelector('.modal-x').innerHTML = icon('close', 22);
+      document.getElementById('m-titulo').textContent = 'Primeiras páginas de ' + l.titulo;
+      document.getElementById('m-texto').innerHTML = l.trecho.map(p => `<p>${escHTML(p)}</p>`).join('');
+      document.getElementById('m-cta').innerHTML = (l.meu || l.possui ? '' : `<a class="btn" href="checkout.html?id=${l.id}">Continuar lendo por ${ER.brl(l.preco)}</a>`) + '<button class="btn-quiet" type="button" data-close>Voltar à página</button>';
+      L.bindModal(back);
+      back.addEventListener('click', e => { if (e.target.closest('[data-close]')) L.closeModal(back); });
+      document.getElementById('amostra').onclick = () => L.openModal(back);
+    }
+
+    // avaliação
+    const fa = document.getElementById('form-aval');
+    if (fa) fa.onsubmit = async e => {
+      e.preventDefault();
+      const nota = (fa.querySelector('[name=nota]:checked') || {}).value, erroEl = document.getElementById('av-erro');
+      erroEl.textContent = '';
+      if (!nota) { erroEl.textContent = 'Escolha uma nota de 1 a 5.'; return; }
+      try { await ER.api('POST', '/api/produtos/' + l.id + '/avaliacao', { nota: +nota, texto: document.getElementById('av-texto').value }); L.toast('Avaliação publicada. Obrigado!'); carrega().then(() => { const t = document.getElementById('t-p3'); if (t) t.click(); }); }
+      catch (err) { erroEl.textContent = err.message; }
+    };
+    if (location.hash === '#garantia') document.getElementById('garantia').scrollIntoView();
+  }
+  carrega();
+</script>
+</body>
+</html>

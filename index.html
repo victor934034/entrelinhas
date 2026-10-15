@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>entre linhas | Livros e produtos digitais de autores independentes</title>
+<meta name="description" content="Ebooks, guias, planilhas e minicursos de autores independentes. Pague com Pix direto ao autor e baixe o arquivo.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+
+<main id="conteudo">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <h1>Leia o que ninguém te indicou ainda.</h1>
+        <p class="lede">Ebooks, guias, planilhas e minicursos de autores independentes. Você paga por Pix direto ao autor e baixa o arquivo assim que ele confirmar.</p>
+        <div class="hero-actions">
+          <a class="btn btn-lg" href="catalogo.html">Ver o catálogo</a>
+          <a class="btn-quiet" href="painel.html">Quero vender o meu livro</a>
+        </div>
+        <div class="hero-note" id="hero-note"></div>
+      </div>
+      <div class="hero-art on-navy" aria-label="Capas de livros do catálogo" id="hero-art"></div>
+    </div>
+  </section>
+
+  <section class="section-tight" aria-labelledby="h-lombadas">
+    <div class="wrap"><div class="split-head"><h2 id="h-lombadas">Escolha pela lombada</h2><a class="btn-quiet" href="catalogo.html">Ver tudo de uma vez</a></div></div>
+    <div class="wrap"><div class="shelf-line"><div class="spines" id="spines"></div><aside><p>Ninguém precisa saber o nome do autor para começar. Puxe uma lombada.</p><small>Cada uma abre a prateleira com os títulos daquele assunto.</small></aside></div><div class="shelf-rule"></div></div>
+  </section>
+
+  <section class="section" aria-labelledby="h-novos" id="sec-novos">
+    <div class="wrap">
+      <div class="split-head"><h2 id="h-novos">Chegaram há pouco</h2></div>
+      <div id="novos-wrap"></div>
+    </div>
+  </section>
+
+  <section class="section-tight" aria-labelledby="h-vendidos" id="sec-rank" hidden>
+    <div class="wrap">
+      <div class="split-head"><h2 id="h-vendidos">O que mais saiu</h2></div>
+      <div class="rank" id="rank"></div>
+    </div>
+  </section>
+
+  <section class="author-band on-navy" id="vender" style="margin-top:clamp(48px,7vw,96px)">
+    <div class="wrap">
+      <div>
+        <h2>Escreveu algo? Coloque à venda hoje à noite.</h2>
+        <p class="lede">Suba o arquivo, defina o preço e compartilhe o link. Sem mensalidade e sem intermediário no dinheiro: o leitor paga por Pix direto na sua chave.</p>
+        <p style="margin-top:28px"><a class="btn btn-paper btn-lg" href="novo-produto.html">Publicar meu primeiro produto</a></p>
+      </div>
+      <div>
+        <ol class="steps-list">
+          <li><span>Crie sua conta e cadastre a chave Pix onde você quer receber.</span></li>
+          <li><span>Envie o PDF, EPUB, MP4, MP3, ZIP ou XLSX e escolha capa e preço.</span></li>
+          <li><span>Quando o leitor avisar que pagou, você confere no seu banco e libera o arquivo com um clique.</span></li>
+        </ol>
+        <ul style="list-style:none;padding:0;margin:20px 0 0;display:grid;gap:12px">
+          <li style="display:flex;gap:12px"><span data-ic="pix"></span><span>Pix com QR Code e copia e cola gerados na hora, com o valor exato.</span></li>
+          <li style="display:flex;gap:12px"><span data-ic="shield"></span><span>Arquivo só abre para quem comprou, sem DRM que atrapalhe a leitura.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="js/data.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/covers.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  L.mount({ active: '' });
+  document.querySelectorAll('[data-ic]').forEach(e => e.innerHTML = icon(e.dataset.ic, 22));
+  document.getElementById('hero-note').innerHTML = icon('shield') + '<span>Comprou e não gostou? Dentro do prazo de garantia do produto você pede o reembolso direto na sua estante.</span>';
+
+  (async function () {
+    let todos = [];
+    const wrap = document.getElementById('novos-wrap');
+    try { todos = (await ER.api('GET', '/api/produtos')).produtos; }
+    catch (e) { wrap.innerHTML = `<div class="empty"><h3>Não foi possível carregar o catálogo</h3><p class="muted">${escHTML(e.message)}</p></div>`; }
+
+    document.getElementById('spines').innerHTML = ER.CATEGORIAS.map(c =>
+      `<a class="spine${c.lite ? ' lite' : ''}" href="catalogo.html?cat=${c.id}" style="background:${c.cor};height:${c.altura}px">${c.nome}</a>`).join('');
+
+    const porData = todos.slice().sort((a, b) => b.criado - a.criado);
+    const hero = document.getElementById('hero-art');
+    if (porData.length) {
+      const fan = porData.slice(0, 3), n = fan.length;
+      const cls = n === 3 ? ['c1', 'c2', 'c3'] : n === 2 ? ['c1', 'c3'] : ['c2'];
+      hero.innerHTML = `<div class="hero-tag"><b>Chegou agora na estante</b>${escHTML(porData[0].titulo)}, de ${escHTML(porData[0].autor)}, ${ER.brl(porData[0].preco)}</div><div class="fan">${fan.map((l, i) => coverSVG(l, { cls: cls[i] })).join('')}</div><div class="sill"></div>`;
+    } else {
+      hero.innerHTML = '<div class="empty-hero"><h2 style="color:var(--paper);font-size:1.5rem">A estante está vazia.</h2><p>Seja a primeira pessoa a publicar aqui.</p><p><a class="btn btn-paper" href="novo-produto.html">Publicar um produto</a></p></div>';
+    }
+
+    if (!porData.length) {
+      if (!wrap.innerHTML) wrap.innerHTML = '<div class="empty"><h3>Ainda não há produtos no catálogo</h3><p class="muted">Os primeiros títulos aparecem aqui assim que alguém publicar.</p><a class="btn" href="novo-produto.html">Publicar o primeiro</a></div>';
+      return;
+    }
+    const vend = todos.slice().sort((a, b) => b.vendas - a.vendas || b.criado - a.criado);
+    const f = vend[0].vendas > 0 ? vend[0] : porData[0];
+    const outros = porData.filter(x => x.id !== f.id);
+    const mini = outros.slice(0, 3), grid = outros.slice(3, 7);
+    wrap.innerHTML = `<div class="arrivals"><div><article class="feature">
+      <a href="produto.html?id=${f.id}" aria-label="${escHTML(f.titulo)}">${coverSVG(f, { cls: 'cover-lift' })}</a>
+      <div>
+        <span class="tag tag-navy">${f.vendas > 0 ? 'Mais vendido' : 'Em destaque'}</span>
+        <h3 style="margin-top:12px">${escHTML(f.titulo)}</h3>
+        <p class="muted small" style="margin:0">${escHTML(f.autor)}, ${escHTML(f.tipo)}</p>
+        ${f.sub ? `<blockquote>${escHTML(f.sub)}</blockquote>` : ''}
+        <div class="row"><span class="price">${ER.brl(f.preco)}</span><a class="btn" href="produto.html?id=${f.id}">Ver detalhes</a></div>
+      </div></article>
+      ${mini.length ? `<div class="mini"><h3>Também chegaram</h3>${mini.map(l => `<a href="produto.html?id=${l.id}"><div>${coverSVG(l)}</div><span><b>${escHTML(l.titulo)}</b><small>${escHTML(l.autor)}</small></span><span class="price">${ER.brl(l.preco)}</span></a>`).join('')}</div>` : ''}</div>
+      <div class="grid-2x2">${grid.map(L.bookCard).join('')}</div></div>`;
+    const top = vend.filter(l => l.vendas > 0).slice(0, 8);
+    if (top.length) {
+      document.getElementById('sec-rank').hidden = false;
+      document.getElementById('rank').innerHTML = top.map(l => `
+        <a href="produto.html?id=${l.id}">
+          <div>${coverSVG(l)}</div>
+          <div><h4>${escHTML(l.titulo)}</h4><p>${escHTML(l.autor)}</p></div>
+          <span class="price">${ER.brl(l.preco)}</span>
+        </a>`).join('');
+    }
+  })();
+</script>
+</body>
+</html>

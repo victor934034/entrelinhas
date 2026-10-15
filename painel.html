@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel do autor | entre linhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .chart-tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--paper); font-size: .8125rem; padding: 6px 10px; border-radius: 3px; white-space: nowrap; transform: translate(-50%, -100%); margin-top: -8px; z-index: 5; }
+  .chart-tip b { font-family: var(--f-title); }
+  .chart-box { position: relative; }
+  .aviso-pix { background: #F6E4CF; border-left: 4px solid var(--amber); padding: 14px 18px; margin-bottom: 24px; }
+  .aviso-pix p { margin: 0; }
+</style>
+</head>
+<body>
+<div id="site-header"></div>
+<div class="dash">
+  <aside class="side">
+    <div class="who"><b id="quem"></b><span class="small muted">Painel do autor</span></div>
+    <nav aria-label="Painel">
+      <a href="painel.html" aria-current="page" id="n-visao"></a>
+      <a href="#produtos" id="n-prod"></a>
+      <a href="#vendas" id="n-vendas"></a>
+      <a href="novo-produto.html" id="n-novo"></a>
+      <a href="conta.html" id="n-conta"></a>
+    </nav>
+  </aside>
+
+  <main class="dash-main">
+    <div class="dash-top">
+      <div><p class="muted" style="margin:0 0 4px" id="periodo"></p><h1>Como estão suas vendas</h1></div>
+      <a class="btn" href="novo-produto.html" id="btn-novo"></a>
+    </div>
+    <div id="aviso"></div>
+
+    <div class="dash-grid-1">
+      <section class="panel panel-navy on-navy" aria-labelledby="h-saldo">
+        <h2 id="h-saldo" style="font-size:1.0625rem;font-family:var(--f-body);font-weight:500;color:#C9D4DC">Recebido em vendas confirmadas</h2>
+        <p class="balance" id="recebido"></p>
+        <p class="small" style="color:#C9D4DC;margin:0">O dinheiro cai direto na sua chave Pix. Aqui você só acompanha.</p>
+        <div class="split"><div><b id="aguardando"></b>aguardando confirmação</div><div><b id="n-vendas-total"></b>vendas confirmadas</div></div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-graf">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+          <div><h2 id="h-graf">Vendas por dia, últimos 30 dias</h2><p class="small muted" style="margin:0" id="graf-sub"></p></div>
+          <button class="btn-quiet small" id="alt" aria-pressed="false">Ver como tabela</button>
+        </div>
+        <div class="chart-box" id="graf"></div>
+        <div id="tabela-graf" hidden class="table-wrap" style="max-height:260px;overflow:auto"></div>
+      </section>
+    </div>
+
+    <div class="dash-grid-2">
+      <section class="panel" id="vendas" aria-labelledby="h-ult">
+        <h2 id="h-ult">Pedidos</h2>
+        <div class="table-wrap"><table><thead><tr><th>Quando</th><th>Comprador</th><th>Produto</th><th class="num">Valor</th><th>Situação</th><th>Ação</th></tr></thead><tbody id="vendas-tb"></tbody></table></div>
+        <p class="muted" id="sem-pedidos" hidden>Nenhum pedido ainda. Compartilhe o link dos seus produtos para começar.</p>
+      </section>
+      <aside class="panel" aria-labelledby="h-av">
+        <h2 id="h-av">Recados</h2>
+        <ul class="notes" id="recados"></ul>
+      </aside>
+    </div>
+
+    <section class="panel" id="produtos" aria-labelledby="h-meus">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><h2 id="h-meus">Seus produtos</h2><a class="btn-quiet small" href="novo-produto.html">Adicionar produto</a></div>
+      <div id="prods"></div>
+    </section>
+  </main>
+</div>
+
+<div id="site-footer"></div>
+<script src="js/data.js"></script><script src="js/icons.js"></script><script src="js/covers.js"></script><script src="js/layout.js"></script>
+<script>
+  L.mount({ active: 'painel' });
+  const $ = id => document.getElementById(id);
+  [['visao', 'home', 'Visão geral'], ['prod', 'box', 'Produtos'], ['vendas', 'chart', 'Pedidos'], ['novo', 'plus', 'Novo produto'], ['conta', 'user', 'Minha conta']].forEach(([k, i, t]) => $('n-' + k).innerHTML = icon(i, 20) + t);
+  $('btn-novo').innerHTML = icon('plus', 18) + ' Publicar novo produto';
+
+  const fmtDia = d => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
+  const chaveDia = d => d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+  let dados = null, usuario = null;
+
+  const SIT = {
+    pago: ['ok', 'Pago'], aguardando: ['warn', 'Aguardando'], reembolso_pedido: ['err', 'Reembolso pedido'], reembolsado: ['', 'Reembolsado']
+  };
+
+  function grafico(pedidos) {
+    const hoje = new Date(), dias = [];
+    for (let i = 29; i >= 0; i--) { const d = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - i); dias.push({ d, n: 0, v: 0 }); }
+    const idx = {}; dias.forEach((x, i) => idx[chaveDia(x.d)] = i);
+    pedidos.filter(o => (o.status === 'pago' || o.status === 'reembolso_pedido') && o.pagoEm).forEach(o => { const i = idx[chaveDia(new Date(o.pagoEm))]; if (i !== undefined) { dias[i].n++; dias[i].v += o.valor; } });
+    const total = dias.reduce((a, x) => a + x.n, 0), max = dias.reduce((a, x) => x.n > a.n ? x : a, dias[0]);
+    $('periodo').textContent = fmtDia(dias[0].d) + ' a ' + fmtDia(dias[29].d);
+    $('graf-sub').textContent = total ? `${total} ${total === 1 ? 'venda' : 'vendas'} no período. O melhor dia foi ${fmtDia(max.d)}, com ${max.n}.` : 'Nenhuma venda confirmada nos últimos 30 dias.';
+
+    const W = 640, H = 220, ml = 28, mb = 26, mt = 18, iw = W - ml, ih = H - mb - mt, topo = Math.max(5, Math.ceil((max.n + 1) / 5) * 5), bw = iw / 30;
+    let g = '';
+    for (let v = 0; v <= topo; v += topo / 5) { const y = mt + ih - v / topo * ih; g += `<line class="grid" x1="${ml}" x2="${W}" y1="${y}" y2="${y}"/><text x="${ml - 8}" y="${y + 4}" text-anchor="end">${v}</text>`; }
+    dias.forEach((x, i) => {
+      const h = x.n / topo * ih, bx = ml + i * bw + 2, w = bw - 4, y = mt + ih - h, isMax = total && x === max;
+      if (h > 0) g += `<path class="bar${isMax ? ' max' : ''}" d="M${bx} ${mt + ih}V${y + 4}q0-4 4-4h${w - 8}q4 0 4 4V${mt + ih}z"/>`;
+      g += `<rect class="hit" data-i="${i}" x="${ml + i * bw}" y="${mt}" width="${bw}" height="${ih}" fill="transparent"/>`;
+      if (i % 6 === 0 || i === 29) g += `<text x="${bx + w / 2}" y="${H - 6}" text-anchor="middle">${fmtDia(x.d)}</text>`;
+    });
+    if (total) g += `<text x="${ml + dias.indexOf(max) * bw + bw / 2}" y="${mt + ih - max.n / topo * ih - 6}" text-anchor="middle" style="fill:var(--ink);font-weight:600">${max.n}</text>`;
+    const box = $('graf');
+    box.innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de barras com as vendas por dia nos últimos 30 dias. Total de ${total} vendas.">${g}</svg><div class="chart-tip" hidden></div>`;
+    const tip = box.querySelector('.chart-tip'), svg = box.querySelector('svg');
+    svg.addEventListener('pointermove', e => {
+      const h = e.target.closest('.hit'); if (!h) { tip.hidden = true; return; }
+      const x = dias[+h.dataset.i];
+      tip.innerHTML = `${x.d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })}<br><b>${x.n} ${x.n === 1 ? 'venda' : 'vendas'}</b>, ${ER.brl(x.v)}`;
+      const br = box.getBoundingClientRect(), hr = h.getBoundingClientRect(); tip.hidden = false;
+      tip.style.left = (hr.left - br.left + hr.width / 2) + 'px'; tip.style.top = (e.clientY - br.top) + 'px';
+    });
+    svg.addEventListener('pointerleave', () => { tip.hidden = true; });
+    $('tabela-graf').innerHTML = `<table><thead><tr><th>Dia</th><th class="num">Vendas</th><th class="num">Valor</th></tr></thead><tbody>${dias.slice().reverse().map(x => `<tr><td>${x.d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}</td><td class="num">${x.n}</td><td class="num">${ER.brl(x.v)}</td></tr>`).join('')}</tbody></table>`;
+  }
+
+  function desenha() {
+    const { produtos, pedidos, avaliacoes } = dados;
+    const visiveis = pedidos.filter(o => o.status !== 'cancelado');
+    $('recebido').textContent = ER.brl(pedidos.filter(o => o.status === 'pago').reduce((s, o) => s + o.valor, 0));
+    $('aguardando').textContent = ER.brl(pedidos.filter(o => o.status === 'aguardando').reduce((s, o) => s + o.valor, 0));
+    $('n-vendas-total').textContent = pedidos.filter(o => o.status === 'pago').length;
+    $('aviso').innerHTML = usuario.temPix ? '' : `<div class="aviso-pix" role="alert"><p><b>Cadastre sua chave Pix.</b> Sem ela ninguém consegue pagar seus produtos. <a href="conta.html">Cadastrar agora</a></p></div>`;
+    grafico(pedidos);
+
+    $('sem-pedidos').hidden = visiveis.length > 0;
+    $('vendas-tb').innerHTML = visiveis.map(o => {
+      const aviso = o.status === 'aguardando' && o.avisoPago;
+      const [cls, txt] = SIT[o.status] || ['', o.status];
+      let acao = '';
+      if (o.status === 'aguardando') acao = `<button class="btn btn-sm" data-conf="${o.id}">Confirmar recebimento</button>`;
+      if (o.status === 'reembolso_pedido') acao = `<div class="act-row"><button class="btn btn-sm" data-reemb="${o.id}" data-ap="1">Aprovar</button><button class="btn btn-ghost btn-sm" data-reemb="${o.id}" data-ap="0">Recusar</button></div>`;
+      return `<tr><td class="nowrap">${ER.dataHora(o.pagoEm || o.criado)}</td><td>${escHTML(o.comprador || '')}<br><span class="xs muted">${escHTML(o.compradorEmail || '')}</span></td><td>${escHTML(o.titulo)}</td><td class="num nowrap">${ER.brl(o.valor)}</td><td><span class="tag ${cls ? 'tag-' + cls : ''}">${aviso ? 'Disse que pagou' : txt}</span></td><td>${acao}</td></tr>`;
+    }).join('');
+
+    const rec = [];
+    pedidos.filter(o => o.status === 'aguardando' && o.avisoPago).forEach(o => rec.push(`<li><b>${escHTML(o.comprador)} diz que pagou ${ER.brl(o.valor)}</b><span class="muted small">${escHTML(o.titulo)}. Confira no seu banco e confirme na tabela.</span></li>`));
+    pedidos.filter(o => o.status === 'reembolso_pedido').forEach(o => rec.push(`<li><b>Pedido de reembolso de ${escHTML(o.comprador)}</b><span class="muted small">${escHTML(o.titulo)}, ${ER.brl(o.valor)}${o.reembolso && o.reembolso.motivo ? '. “' + escHTML(o.reembolso.motivo) + '”' : ''}. Ao aprovar, devolva o valor por Pix.</span></li>`));
+    avaliacoes.slice(0, 4).forEach(a => rec.push(`<li><b>${escHTML(a.nome)} avaliou ${escHTML(a.titulo)}</b><span class="muted small">“${escHTML(a.texto)}” ${a.nota} ${a.nota === 1 ? 'estrela' : 'estrelas'}.</span></li>`));
+    $('recados').innerHTML = rec.length ? rec.join('') : '<li><span class="muted small">Nada por enquanto. Pedidos, reembolsos e avaliações novas aparecem aqui.</span></li>';
+
+    $('prods').innerHTML = produtos.length ? produtos.map(p => `<div class="prod-row"><div>${coverSVG(p)}</div><div><h3><a href="produto.html?id=${p.id}">${escHTML(p.titulo)}</a></h3><small>${ER.brl(p.preco)}, ${p.vendas ? p.vendas + (p.vendas === 1 ? ' venda' : ' vendas') + ', ' + ER.brl(p.receita) + ' recebidos' : 'ainda sem vendas'}</small></div>
+      <div class="act-row"><span class="tag ${p.status === 'publicado' ? 'tag-ok' : 'tag-warn'}">${p.status === 'publicado' ? 'Publicado' : 'Despublicado'}</span>
+      <a class="btn btn-ghost btn-sm" href="novo-produto.html?id=${p.id}">Editar</a>
+      <button class="btn btn-ghost btn-sm" data-status="${p.id}" data-para="${p.status === 'publicado' ? 'rascunho' : 'publicado'}">${p.status === 'publicado' ? 'Despublicar' : 'Publicar'}</button>
+      ${p.pedidos === 0 ? `<button class="btn btn-ghost btn-sm" data-apagar="${p.id}">Apagar</button>` : ''}</div></div>`).join('')
+      : '<div class="empty"><h3>Você ainda não publicou nada</h3><p class="muted">Leva uns dez minutos.</p><a class="btn" href="novo-produto.html">Publicar o primeiro produto</a></div>';
+  }
+
+  async function carrega() {
+    try { dados = await ER.api('GET', '/api/vendedor'); desenha(); }
+    catch (e) { $('vendas-tb').innerHTML = `<tr><td colspan="6">${escHTML(e.message)}</td></tr>`; }
+  }
+  async function agir(fn, ok) { try { await fn(); if (ok) L.toast(ok); await carrega(); } catch (e) { L.toast(e.message); } }
+
+  document.addEventListener('click', e => {
+    const c = e.target.closest('[data-conf]'), r = e.target.closest('[data-reemb]'), s = e.target.closest('[data-status]'), a = e.target.closest('[data-apagar]');
+    if (c) agir(() => ER.api('POST', '/api/pedidos/' + c.dataset.conf + '/confirmar'), 'Pagamento confirmado. O arquivo foi liberado ao comprador.');
+    if (r) agir(() => ER.api('POST', '/api/pedidos/' + r.dataset.reemb + '/reembolso/decidir', { aprovar: r.dataset.ap === '1' }), r.dataset.ap === '1' ? 'Reembolso aprovado. Devolva o valor por Pix ao comprador.' : 'Pedido de reembolso recusado.');
+    if (s) agir(() => ER.api('POST', '/api/produtos/' + s.dataset.status + '/status', { status: s.dataset.para }), s.dataset.para === 'publicado' ? 'Produto publicado' : 'Produto despublicado');
+    if (a) {
+      if (!a.dataset.certo) { a.dataset.certo = '1'; a.textContent = 'Confirmar: apagar de vez'; setTimeout(() => { delete a.dataset.certo; a.textContent = 'Apagar'; }, 5000); }
+      else agir(() => ER.api('DELETE', '/api/produtos/' + a.dataset.apagar), 'Produto apagado');
+    }
+  });
+  const alt = $('alt');
+  alt.onclick = () => { const on = alt.getAttribute('aria-pressed') !== 'true'; alt.setAttribute('aria-pressed', on); alt.textContent = on ? 'Ver como gráfico' : 'Ver como tabela'; $('graf').hidden = on; $('tabela-graf').hidden = !on; };
+
+  ER.exigeLogin().then(u => { usuario = u; $('quem').textContent = u.nome; carrega(); setInterval(carrega, 15000); });
+</script>
+</body>
+</html>

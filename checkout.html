@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finalizar compra | entre linhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main class="wrap" id="raiz"><p class="muted" style="padding:48px 0">Carregando…</p></main>
+<script src="js/vendor/qrcode.js"></script>
+<script src="js/data.js"></script><script src="js/icons.js"></script><script src="js/covers.js"></script><script src="js/layout.js"></script>
+<script>
+  L.mount({ checkout: true });
+  const $ = s => document.querySelector(s);
+  const params = new URLSearchParams(location.search);
+  const raiz = document.getElementById('raiz');
+  let pedido = null, produto = null, usuario = null, timer = null;
+
+  function falha(titulo, msg, acao) {
+    raiz.innerHTML = `<div class="empty" style="margin:64px 0"><h3>${escHTML(titulo)}</h3><p class="muted">${escHTML(msg)}</p>${acao || '<a class="btn" href="catalogo.html">Ver o catálogo</a>'}</div>`;
+  }
+
+  function qrSVG(texto) {
+    const q = qrcode(0, 'M'); q.addData(texto); q.make();
+    const n = q.getModuleCount(); let r = '';
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (q.isDark(y, x)) r += `<rect x="${x}" y="${y}" width="1.02" height="1.02"/>`;
+    return `<svg viewBox="-3 -3 ${n + 6} ${n + 6}" role="img" aria-label="QR Code Pix para pagar ${ER.brl(pedido.valor)}" style="background:#fff" fill="#000" shape-rendering="crispEdges">${r}</svg>`;
+  }
+
+  function desenha() {
+    const l = produto;
+    document.title = 'Comprar ' + l.titulo + ' | entre linhas';
+    const aguardando = pedido && pedido.status === 'aguardando';
+    raiz.innerHTML = `
+    <div class="checkout">
+      <div>
+        <h1>Falta pouco para começar a ler.</h1>
+
+        <div class="step-title"><span>1</span><h2>Sua conta</h2></div>
+        <p style="margin:0 0 6px"><b>${escHTML(usuario.nome)}</b><br><span class="muted">${escHTML(usuario.email)}</span></p>
+        <p class="xs muted" style="margin:0">O arquivo fica disponível na sua estante, nesta conta. Não é você? <a href="#" id="trocar">Entrar com outra conta</a></p>
+
+        <div class="step-title"><span>2</span><h2>Pague com Pix</h2></div>
+        ${aguardando ? painelPix() : `
+          <p class="muted small" style="margin-top:0">Vamos gerar um Pix com o valor exato de <b>${ER.brl(l.preco)}</b>, para a chave de ${escHTML(l.autor)}. Você paga no app do seu banco.</p>
+          <button class="btn btn-lg btn-block mt-1" type="button" id="gerar">Gerar Pix de ${ER.brl(l.preco)}</button>
+          <p class="form-erro" id="erro" role="alert"></p>`}
+        <p class="xs muted" style="margin-top:14px">O reembolso pode ser pedido em até ${l.garantia} dias depois da confirmação, na sua estante.</p>
+      </div>
+
+      <aside class="summary" aria-label="Resumo do pedido">
+        <div class="item"><div>${coverSVG(l)}</div><div><h3>${escHTML(l.titulo)}</h3><p class="small muted" style="margin:0">${escHTML(l.autor)}<br>${l.formatos.map(f => f[0]).join(' e ')}</p></div><span class="price">${ER.brl(l.preco)}</span></div>
+        <dl><div><dt>Entrega</dt><dd>Digital, sem frete</dd></div><div class="total"><dt>Total</dt><dd>${ER.brl(l.preco)}</dd></div></dl>
+        <div class="guarantee">${icon('shield')}<p style="margin:0"><b>${l.garantia} dias de garantia.</b> Se o arquivo não for o que você esperava, peça o reembolso ao autor pela estante.</p></div>
+      </aside>
+    </div>`;
+    $('#trocar').onclick = async e => { e.preventDefault(); try { await ER.api('POST', '/api/sair'); } catch (err) { /* segue */ } location.href = 'entrar.html?next=' + encodeURIComponent('checkout.html?id=' + l.id); };
+    const g = $('#gerar'); if (g) g.onclick = gerar;
+    if (aguardando) ligaPix();
+  }
+
+  function painelPix() {
+    return `<div class="pay-panel">
+      <div class="qr">
+        <div id="qr">${qrSVG(pedido.pix)}</div>
+        <div>
+          <p style="margin-bottom:6px"><b>Pague pelo app do seu banco</b></p>
+          <p class="muted small">Abra o app, escolha Pix, leia o QR Code ou cole o código abaixo. O valor já vem preenchido: <b>${ER.brl(pedido.valor)}</b>.</p>
+          <div class="pix-code"><input readonly id="pix-code" aria-label="Código Pix copia e cola" value="${escHTML(pedido.pix)}"><button type="button" class="btn btn-ghost" id="copiar">Copiar</button></div>
+          <p class="xs muted" style="margin:10px 0 0">Pedido ${escHTML(pedido.id)}. Quem recebe: ${escHTML(pedido.autor)}.</p>
+        </div>
+      </div>
+    </div>
+    <div id="estado">${pedido.avisoPago
+      ? `<div class="pix-wait" role="status">${icon('mail', 20)}<span>Avisamos o autor que você pagou. Assim que o pagamento for confirmado no banco dele, seu arquivo é liberado. Esta página atualiza sozinha.</span></div>`
+      : `<button class="btn btn-lg btn-block mt-2" type="button" id="paguei">Já paguei, avisar o autor</button>`}
+      <p class="form-erro" id="erro" role="alert"></p>
+      <p class="mt-1"><button class="btn-quiet small" type="button" id="cancelar">Cancelar este pedido</button></p>
+    </div>`;
+  }
+
+  function ligaPix() {
+    $('#copiar').onclick = async () => {
+      const v = $('#pix-code').value;
+      try { await navigator.clipboard.writeText(v); } catch (e) { $('#pix-code').select(); document.execCommand && document.execCommand('copy'); }
+      L.toast('Código Pix copiado');
+    };
+    const p = $('#paguei');
+    if (p) p.onclick = async () => {
+      p.disabled = true;
+      try { pedido = (await ER.api('POST', '/api/pedidos/' + pedido.id + '/avisar')).pedido; desenha(); }
+      catch (e) { $('#erro').textContent = e.message; p.disabled = false; }
+    };
+    $('#cancelar').onclick = async () => {
+      try { await ER.api('POST', '/api/pedidos/' + pedido.id + '/cancelar'); clearInterval(timer); location.href = 'produto.html?id=' + produto.id; }
+      catch (e) { $('#erro').textContent = e.message; }
+    };
+    clearInterval(timer);
+    timer = setInterval(async () => {
+      try {
+        const p2 = (await ER.api('GET', '/api/pedidos/' + pedido.id)).pedido;
+        if (p2.status === 'pago') { clearInterval(timer); location.href = 'obrigado.html?pedido=' + p2.id; }
+        else if (p2.status === 'cancelado') { clearInterval(timer); location.href = 'produto.html?id=' + produto.id; }
+      } catch (e) { /* tenta de novo no próximo ciclo */ }
+    }, 4000);
+  }
+
+  async function gerar() {
+    const b = $('#gerar'); b.disabled = true; $('#erro').textContent = '';
+    try { pedido = (await ER.api('POST', '/api/pedidos', { pid: produto.id })).pedido; desenha(); }
+    catch (e) {
+      b.disabled = false;
+      if (e.status === 409 && /já comprou/.test(e.message)) return falha('Você já tem este título', e.message, '<a class="btn" href="biblioteca.html">Abrir minha estante</a>');
+      $('#erro').textContent = e.message;
+    }
+  }
+
+  (async function () {
+    usuario = await ER.exigeLogin();
+    const id = params.get('id');
+    try { produto = (await ER.api('GET', '/api/produtos/' + encodeURIComponent(id || ''))).produto; }
+    catch (e) { return falha(e.status === 404 ? 'Produto não encontrado' : 'Não foi possível carregar', e.message); }
+    if (produto.meu) return falha('Este produto é seu', 'Você já tem acesso aos arquivos pelo painel do autor.', '<a class="btn" href="painel.html">Ir ao painel</a>');
+    if (produto.possui) return falha('Você já tem este título', 'Ele está na sua estante.', '<a class="btn" href="biblioteca.html">Abrir minha estante</a>');
+    if (produto.status !== 'publicado') return falha('Produto indisponível', 'O autor tirou este produto da venda.');
+    // retoma um pedido que ficou aguardando pagamento
+    try {
+      const est = (await ER.api('GET', '/api/estante')).pedidos.find(o => o.pid === produto.id && o.status === 'aguardando');
+      if (est) pedido = (await ER.api('GET', '/api/pedidos/' + est.id)).pedido;
+    } catch (e) { /* segue sem retomar */ }
+    desenha();
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minha conta | entre linhas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..800,0..100,0..1;1,9..144,300..800,0..100,0..1&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<main class="wrap section-tight">
+  <div class="page-head" style="border:0;padding-top:16px">
+    <h1>Minha conta</h1>
+    <p class="lede" style="margin:0" id="aviso">Seus dados e a chave Pix onde você recebe, se vender.</p>
+  </div>
+
+  <div style="max-width:560px">
+    <form id="perfil" novalidate>
+      <h2 style="font-size:1.375rem">Dados pessoais</h2>
+      <div class="field"><label for="nome">Nome <span class="hint">aparece como autor nos seus produtos</span></label><input id="nome" autocomplete="name" maxlength="80"><span class="msg">Escreva seu nome.</span></div>
+      <div class="field"><label for="email">E-mail <span class="hint">não pode ser alterado</span></label><input id="email" readonly></div>
+      <div class="field"><label for="cidade">Cidade <span class="hint">opcional, aparece nas suas avaliações e no Pix</span></label><input id="cidade" maxlength="15" placeholder="Ex.: Recife"></div>
+      <div class="field"><label for="bio">Sobre você <span class="hint">opcional, aparece na página dos seus produtos</span></label><textarea id="bio" maxlength="600" placeholder="Quem é você, o que escreve, de onde fala."></textarea></div>
+
+      <h2 style="font-size:1.375rem;margin-top:36px">Onde você recebe</h2>
+      <p class="muted small" style="margin-top:0">Quem comprar paga por Pix direto nesta chave. Só é necessária se você for publicar produtos.</p>
+      <div class="field-row">
+        <div class="field"><label for="pixTipo">Tipo da chave</label><select id="pixTipo"><option value="">Nenhuma</option><option value="cpf">CPF</option><option value="cnpj">CNPJ</option><option value="celular">Celular</option><option value="email">E-mail</option><option value="aleatoria">Chave aleatória</option></select></div>
+        <div class="field"><label for="pixChave">Chave Pix</label><input id="pixChave" autocomplete="off" maxlength="80"></div>
+      </div>
+      <p class="form-erro" id="erro" role="alert"></p>
+      <div class="act-row mt-1"><button class="btn" type="submit" id="salvar">Salvar alterações</button><a class="btn-quiet" id="seguir" href="painel.html" hidden>Ir para o painel do autor</a></div>
+    </form>
+
+    <form id="senha" novalidate style="margin-top:48px;border-top:1.5px solid var(--line-strong);padding-top:28px">
+      <h2 style="font-size:1.375rem">Trocar a senha</h2>
+      <div class="field"><label for="atual">Senha atual</label><input id="atual" type="password" autocomplete="current-password"></div>
+      <div class="field"><label for="nova">Nova senha <span class="hint">pelo menos 8 caracteres</span></label><input id="nova" type="password" autocomplete="new-password"></div>
+      <p class="form-erro" id="erro-senha" role="alert"></p>
+      <button class="btn btn-ghost mt-1" type="submit">Trocar senha</button>
+    </form>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="js/data.js"></script><script src="js/icons.js"></script><script src="js/covers.js"></script><script src="js/layout.js"></script>
+<script>
+  L.mount({ active: '' });
+  const $ = id => document.getElementById(id);
+  (async function () {
+    const u = await ER.exigeLogin();
+    $('nome').value = u.nome; $('email').value = u.email; $('cidade').value = u.cidade; $('bio').value = u.bio; $('pixTipo').value = u.pixTipo; $('pixChave').value = u.pixChave;
+    if (new URLSearchParams(location.search).get('novo')) $('aviso').textContent = 'Conta criada. Para vender, cadastre abaixo a chave Pix onde você quer receber.';
+    if (u.temPix) $('seguir').hidden = false;
+
+    $('perfil').onsubmit = async e => {
+      e.preventDefault(); $('erro').textContent = '';
+      const campo = $('nome').closest('.field'); campo.classList.toggle('invalid', $('nome').value.trim().length < 2);
+      if ($('nome').value.trim().length < 2) return $('nome').focus();
+      if ($('pixChave').value.trim() && !$('pixTipo').value) { $('erro').textContent = 'Escolha o tipo da chave Pix.'; return; }
+      try {
+        const body = { nome: $('nome').value, cidade: $('cidade').value, bio: $('bio').value, pixTipo: $('pixTipo').value, pixChave: $('pixTipo').value ? $('pixChave').value : '' };
+        const r = await ER.api('PUT', '/api/eu', body);
+        $('pixChave').value = r.usuario.pixChave; $('pixTipo').value = r.usuario.pixTipo;
+        $('seguir').hidden = !r.usuario.temPix;
+        L.toast('Dados salvos'); ER.eu(true).then(x => L.mount({ active: '' }));
+      } catch (err) { $('erro').textContent = err.message; }
+    };
+    $('senha').onsubmit = async e => {
+      e.preventDefault(); $('erro-senha').textContent = '';
+      try { await ER.api('PUT', '/api/eu/senha', { atual: $('atual').value, nova: $('nova').value }); $('atual').value = ''; $('nova').value = ''; L.toast('Senha alterada'); }
+      catch (err) { $('erro-senha').textContent = err.message; }
+    };
+  })();
+</script>
+</body>
+</html>
